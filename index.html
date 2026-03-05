@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Simulador de Decoração Profissional - Rute</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Poppins:wght300;400;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+    /* style.css INCORPORADO para eliminar cache */
+    :root{
+      --primary-light:#4299e1; 
+      --primary-dark:#0c4a6e;
+      --bg1:#f8f9fb;
+      --bg2:#ffffff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#10b981; 
+      --text:#0b1220;
+      --footer-dark1: #0d416b; 
+      --footer-dark2: #0b1220; 
+    }
+    *{box-sizing:border-box}
+
+    body{font-family:Poppins, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;margin:0;background:var(--bg1);color:var(--text);-webkit-font-smoothing:antialiased;}
+
+    /* TOPO e MENU */
+    .topo{
+      position:sticky;
+      top:0;
+      z-index:999;
+      background:linear-gradient(90deg, var(--footer-dark1), var(--footer-dark2)); 
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      width:100%;
+    }
+    .menu{display:flex;gap:16px;flex-wrap:wrap;max-width:1200px;justify-content:center;padding:12px 16px;width:100%;} 
+    .menu a{color:#e5e7eb;text-decoration:none;padding:8px 10px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:500;}
+    .menu a:hover{background:rgba(255,255,255,0.1);}
+
+    /* banners */
+    .banners{display:flex;flex-direction:column;gap:10px;padding:16px;max-width:1200px;margin:0 auto}
+    .banner{width:100%;height:auto;border-radius:10px;object-fit:cover;display:block;max-height:280px}
+
+    /* upload area */
+    .upload{display:flex;gap:18px;align-items:flex-start;padding:20px;flex-wrap:wrap;justify-content:center;max-width:1200px;margin:0 auto}
+    .grupo{display:flex;flex-direction:column;gap:6px;align-items:center}
+    .action-group{min-width: 180px; margin-top: 10px;}
+  /* Botões */
+    .file-btn, .btn-primary, .btn-secondary, .btn-action {
+      border-radius:10px; cursor:pointer; font-weight:600; transition:box-shadow .2s ease, transform .2s ease;
+      white-space:nowrap; text-align:center;
+    }
+    .file-btn{
+      padding:10px 18px; background:var(--bg2); color:var(--primary-dark);
+      border:1px solid var(--primary-light); box-shadow:0 6px 14px rgba(66, 153, 225, 0.1);
+    }
+    .file-btn:hover{box-shadow:0 10px 20px rgba(66, 153, 225, 0.2);transform:translateY(-2px);}
+    .file-btn input[type=file]{display:none;}
+    .btn-primary{
+      background:linear-gradient(180deg, var(--primary-light), #1e70bf);
+      color:#fff; padding:10px 20px; border:none; box-shadow:0 8p x 20px rgba(66, 153, 225, 0.3);
+    }
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(66, 153, 225, 0.4);}
+    .btn-primary.big{padding:14px 28px;font-size:17px;}
+    .btn-secondary {
+        background: #e9eef5; color: var(--primary-dark); padding: 10px 20px;
+        border: 1px solid #c9d2de; box-shadow: 0 4px 10px rgba(6, 21, 38, 0.05);
+    }
+    .btn-secondary:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(6, 21, 38, 0.1); }
+    .btn-action {
+        background: #f1f5f9; color: #333; border: 1px solid #e2e8f0;
+        padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 14px;
+    }
+    .btn-action:hover { background: #e2e8f0; }
+
+    /* Mensagem de sucesso (Feedback 5s) */
+    .upload-status{
+      font-weight:600; color:var(--muted); height:18px; opacity:0;
+      transition:opacity .3s ease; margin-top:4px;
+    }
+    .upload-status.show{opacity:1;}
+    .upload-status.success{color:var(--accent);font-weight:700;} 
+
+    /* Animação de Carregamento */
+    .inserting{margin-top:8px;color:var(--primary-light);font-weight:600;display:flex;align-items:center;gap:6px}
+    .inserting::before { content: "🔄"; animation: spin 1s linear infinite; }
+    .hidden{display:none} 
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* visual area (Responsividade Aprimorada) */
+    .visual{padding:16px;max-width:1200px;margin:0 auto}
+    .visual-content-container { 
+        display: block; 
+        max-width: 1000px; 
+        margin: 0 auto;
+    }
+    .visual-title{font-family:'Playfair Display', serif;text-align:center;margin:6px 0 12px;font-size:28px;color:var(--text)}
+    .action-row-visual {
+        display: flex; justify-content: center; gap: 12px; margin: 18px 0; flex-wrap: wrap;
+        align-items: center; 
+    }
+    #downloadStatus { 
+        margin-top: 0; padding: 8px 15px; border-radius: 8px; 
+    }
+  /* Palco 3D (Área de Simulação Profissional) */
+    .stage-wrap{
+        position:relative; 
+        max-width:100%; 
+        margin:18px 0; 
+        perspective: 1000px; /* Adicionado para potencializar o efeito 3D */
+    }
+    .stage{
+        position:relative;
+        width:100%; 
+        height:60vh; 
+        max-height:600px;
+        border-radius:12px;
+        box-shadow:0 15px 50px rgba(2,6,23,0.18); /* Sombra mais intensa para efeito profissional */
+        border: 2px solid var(--primary-light); /* Borda de destaque profissional */
+        background:linear-gradient(180deg,#fff,#f8fbff);
+        overflow:hidden;
+        touch-action: pan-y; /* CORREÇÃO: Permite o scroll vertical da página */
+    }
+    .env-bg{position:absolute;width:100%;height:100%;object-fit:cover;user-select:none; transition: opacity 0.3s ease;} 
+    /* NOVO ESTILO: Color Overlay para Efeito 3D */
+    .color-overlay{
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0; 
+        background-color: transparent;
+        mix-blend-mode: color; /* Aplica a cor sobre a imagem sem removê-la */
+        transition: opacity 0.3s ease;
+        z-index: 1; 
+        pointer-events: none;
+    }
+    .layer-container{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index: 10;} 
+    .dec-item{
+        position:absolute;
+        pointer-events:auto;
+        user-select:none; 
+        cursor: grab;
+        min-width: 20px;
+        min-height: 20px;
+        transition: box-shadow 0.1s ease;
+    }
+    .dec-item.selected{
+        border:2px dashed var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+    }
+    .dec-item img{width:100%;height:100%;object-fit:contain;pointer-events:none;}
+    .dec-item p {
+        position:absolute; pointer-events:none; margin:0; white-space:nowrap;
+        color: inherit; font-size: inherit; font-family: inherit;
+    }
+    
+    /* Menu Profissional */
+    .professional-menu{
+        margin: 20px auto 16px; 
+        width:100%;
+        max-width: 1000px; 
+        background:var(--card);
+        border-radius:12px;
+        padding:16px;
+        box-shadow:0 12px 30px rgba(2,6,23,0.06);
+        font-family:inherit;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px; 
+        justify-content: space-around;
+    }
+    .professional-menu .controls-section {
+        flex: 1 1 100%; 
+        min-width: unset;
+        margin-bottom: 0;
+    }
+  .controls-section {
+        padding: 15px;
+        background: var(--bg1);
+        border-radius: 10px;
+        border: 1px solid #e8eefc;
+    }
+    .controls-section h3, .controls-section h4 {
+        margin: 5px 0 15px;
+        color: var(--primary-dark);
+        font-family: 'Playfair Display', serif;
+        font-weight: 600;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 5px;
+    }
+    .controls-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px}
+    .selected-info{font-weight:600;color:var(--primary-light);margin-bottom:10px;padding-bottom:5px;}
+    .controls{display:flex;flex-direction:column;gap:5px;padding-top:10px;margin-top:5px}
+    .controls input[type="range"]{width:100%;margin-bottom:8px}
+    .controls input[type="text"]{padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;}
+    .controls select{padding:8px;border:1px solid #ddd;border-radius:66px;margin-bottom:8px;}
+    .btn-row{display:flex;gap:10px;margin-top:10px}
+
+    /* Controles de Pintura (Cor de Fundo - RESPONSIVO) */
+    .swatches{
+        display:flex; 
+        gap:10px; 
+        align-items:center;
+        /* HABILITA QUEBRA DE LINHA PARA RESPONSIVIDADE EM 3 LINHAS */
+        flex-wrap: wrap; 
+        overflow-x:hidden; 
+        padding:6px 0;
+        margin-bottom:10px;
+    }
+    .swatch{
+        flex-shrink:0; 
+        width:30px;
+        height:30px;
+        border-radius:50%;
+        border:2px solid rgba(0,0,0,0.06);
+        cursor:pointer;
+        box-shadow:0 6px 18px rgba(0,0,0,0.06)
+    }
+    .pintura-controls{display:flex;gap:10px;align-items:center; flex-wrap: wrap;} 
+    .pintura-controls input[type="color"]{width:50px;height:30px;border:none;padding:0;border-radius:4px;}
+
+    /* Biblioteca (Carrosséis) */
+    .secao{padding:16px;max-width:1200px;margin:20px auto}
+    .secao h2{font-family:'Playfair Display', serif;margin-top:0;font-size:22px;color:var(--primary-dark)}
+    .carousel{overflow:hidden;padding:10px 0;}
+    .carousel-track{
+        display:flex; gap:12px; overflow-x:scroll; padding:8px 6px; scroll-behavior:smooth;
+        -webkit-overflow-scrolling:touch; touch-action:pan-x;
+    }
+    .carousel-track::-webkit-scrollbar { display: none; } 
+    .item{flex:0 0 120px;max-width:150px;border-radius:8px;overflow:hidden;background:var(--card);padding:4px;box-shadow:0 6px 18px rgba(6,21,38,0.06);cursor:pointer;transition:transform .14s ease}
+    .item:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(6,21,38,0.1)}
+    .item img{display:block;width:100%;height:80px;object-fit:cover;border-radius:6px;}
+
+    /* Assistente IA */
+    .ia-box { max-width: 1200px; margin: 20px auto; padding: 15px; background: var(--bg2); border-radius: 12px; box-shadow: 0 6px 20px rgba(2,6,23,0.04); }
+    .ia-respostas { min-height: 40px; max-height: 250px; overflow-y: auto; padding: 10px; background: var(--bg1); border-radius: 8px; margin-bottom: 10px; }
+    .ia-msg { padding: 8px; border-bottom: 1px dotted #e8eefc; margin-bottom: 4px; font-size: 14px;}
+    .ia-msg:last-child { border-bottom: none; }
+    .ia-input { display: flex; gap: 10px; }
+    .ia-input input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+
+    /* Footer */
+    .rodape{background:linear-gradient(90deg,var(--footer-dark1),var(--footer-dark2));color:#fff;text-align:center;padding:20px;margin-top:30px}
+    .rodape p{margin:5px 0;font-family:inherit}
+
+    /* Responsividade em telas pequenas */
+    @media (max-width:600px){
+        .upload {flex-direction: column; align-items: stretch; padding: 16px;}
+        .grupo {width: 100%;}
+        .file-btn {width: 100%;}
+        .btn-primary.big {width: 100%;}
+        .menu{gap:10px;}
+        .action-row-visual { flex-direction: column; align-items: stretch; }
+        .controls-toolbar .btn-action { font-size: 12px; padding: 6px 8px; }
+        .professional-menu{padding: 12px;}
+        .controls-section {padding: 12px;}
+    }
+  </style>
+</head>
+<body>
+<header class="topo">
+<nav aria-label="Menu principal" class="menu">
+<a href="#banners">Início</a>
+<a href="#upload">Upload</a>
+<a href="#visual">Simulador 3D</a> <a href="#biblioteca">Biblioteca</a>
+<a href="#assistente">IA</a>
+</nav>
+</header>
+<main>
+<section class="banners" id="banners">
+<img alt="banner1" class="banner" id="banner1" src="https://i.postimg.cc/zDc24Qqn/banner1.png"/>
+<img alt="banner2" class="banner" id="banner2" src="https://i.postimg.cc/L4bQGWmj/banner2.png"/>
+</section>
+<section class="upload" id="upload">
+<div class="grupo">
+<label class="file-btn ambiente" for="fileAmbiente">
+          🏠 Escolher Arquivo de Ambiente
+          <input accept="image/*" id="fileAmbiente" type="file"/>
+</label>
+<div aria-live="polite" class="upload-status" id="ambientMsg"></div>
+</div>
+<div class="grupo">
+<label class="file-btn decoracao" for="fileDecoracao">
+          🪑 Escolher Imagens de Decoração
+          <input accept="image/*" id="fileDecoracao" multiple="" type="file"/>
+</label>
+<div aria-live="polite" class="upload-status" id="decorMsg"></div>
+</div>
+<div class="grupo action-group">
+<button class="btn-primary big" id="btnEnviar">Enviar Imagens</button>
+<div aria-live="assertive" class="inserting hidden" id="insertingAnim">Suas imagens estão sendo inseridas...</div>
+</div>
+</section>
+<section class="visual" id="visual">
+<h2 class="visual-title">Simulador 3D Pro: Edição e Perspectiva Realista!</h2> <div class="action-row-visual">
+<button class="btn-secondary" id="btnNewProject">➕ Criar novo projeto</button>
+<button class="btn-primary" id="btnShare">📤 Compartilhar minha obra de arte</button>
+<button class="btn-primary" id="btnDownload">⬇️ Baixar imagem</button>
+<div aria-live="polite" class="upload-status" id="downloadStatus" style="margin-top: 0; padding: 8px 15px; border-radius: 8px;"></div>
+</div>
+<div class="visual-content-container" id="visualContentContainer">
+<div class="stage-wrap" id="stageWrap"> <div aria-label="Área de simulação 3D" class="stage" id="stage">
+<img alt="Ambiente de fundo" class="env-bg" id="envBg"/>
+<div class="color-overlay" id="colorOverlay"></div>
+<div aria-hidden="false" class="layer-container" id="layerContainer"></div>
+</div>
+<style>
+  .tools-accordion {
+    width: 100%;
+    max-width: 1200px;
+    margin: 16px auto;
+    padding: 0 16px;
+  }
+  
+  .accordion {
+    background-color: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    padding: 14px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: 0.4s;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .active, .accordion:hover {
+    background-color: var(--primary-light);
+    color: white;
+  }
+  
+  .panel {
+    padding: 0;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    border-radius: 0 0 6px 6px;
+  }
+  
+  .panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+  }
+  
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-action {
+    padding: 10px 14px;
+    background-color: var(--primary-light);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-action:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  
+  .input-group label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .swatches {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+</style>
+
+<style>
+  .tabs-menu {
+    width: 100%;
+    max-width: 1200px;
+    margin: 16px auto;
+    padding: 0 16px;
+    font-family: Poppins, sans-serif;
+  }
+  
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0;
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    cursor: pointer;
+    background: var(--bg2);
+    border: none;
+    outline: none;
+    transition: 0.3s;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+  }
+  
+  .tab-button.active {
+    border-bottom: 3px solid var(--primary-light);
+    color: var(--primary-light);
+  }
+  
+  .tab-content {
+    display: none;
+    padding: 16px;
+    background: var(--bg2);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .btn-action {
+    padding: 10px 14px;
+    background-color: var(--primary-light);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-action:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  
+  .input-group label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .swatches {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+</style>
+
+<style>
+  .tabs-menu {
+    width: 100%;
+    max-width: 1200px;
+    margin: 16px auto;
+    padding: 0 16px;
+    font-family: Poppins, sans-serif;
+  }
+  
+  .tabs-container {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-light) var(--bg2);
+  }
+  
+  .tabs-container::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .tabs-container::-webkit-scrollbar-thumb {
+    background-color: var(--primary-light);
+    border-radius: 3px;
+  }
+  
+  .tabs-container::-webkit-scrollbar-track {
+    background-color: var(--bg2);
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    cursor: pointer;
+    background: var(--bg2);
+    border: none;
+    outline: none;
+    transition: 0.3s;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    flex-shrink: 0;
+  }
+  
+  .tab-button.active {
+    border-bottom: 3px solid var(--primary-light);
+    color: var(--primary-light);
+  }
+  
+  .tab-content {
+    display: none;
+    padding: 16px;
+    background: var(--bg2);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .btn-action {
+    padding: 10px 14px;
+    background-color: var(--primary-light);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-action:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  
+  .input-group label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .swatches {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+</style>
+<div class="tabs-menu">
+<div class="tabs-container">
+<button class="tab-button active" onclick="openTab(event, 'pintura')">🎨 Pintura 3D</button>
+<button class="tab-button" onclick="openTab(event, 'imagem')">🖼️ Ajustes de Imagem</button>
+<button class="tab-button" onclick="openTab(event, 'texto')">📝 Ajustes de Texto</button>
+<button class="tab-button" onclick="openTab(event, 'controles')">⚙️ Controles</button>
+</div>
+<div class="tab-content active" id="pintura">
+<div class="panel-section">
+<h4>Pintura 3D</h4>
+<div aria-label="Paleta de cores" class="swatches" id="swatches" role="list"></div>
+<div class="input-group">
+<input aria-label="Selecionar cor" id="colorPicker" title="Selecionar Cor" type="color" value="#ffffff"/>
+<div style="display: flex; gap: 8px;">
+<button class="btn-action" id="aplicarCor">Aplicar Cor</button>
+<button class="btn-action" id="btnResetColor">Remover Cor</button>
+</div>
+</div>
+</div>
+</div>
+<div class="tab-content" id="imagem">
+<div class="panel-section">
+<h4>Ajustes (Imagem)</h4>
+<div class="input-group">
+<label for="ctlOpacity">Opacidade (%)</label>
+<input id="ctlOpacity" max="100" min="0" type="range" value="100"/>
+</div>
+<div class="input-group">
+<label for="ctlRotate">Rotação (graus)</label>
+<input id="ctlRotate" max="180" min="-180" type="range" value="0"/>
+</div>
+<div class="input-group">
+<label for="ctlWidth">Largura (%)</label>
+<input id="ctlWidth" max="200" min="10" type="range" value="100"/>
+</div>
+<div class="input-group">
+<label for="ctlHeight">Altura (%)</label>
+<input id="ctlHeight" max="200" min="10" type="range" value="100"/>
+</div>
+</div>
+</div>
+<div class="tab-content" id="texto">
+<div class="panel-section">
+<h4>Ajustes (Texto)</h4>
+<div class="input-group">
+<input id="textInput" placeholder="Digite seu texto aqui..." value="Seu Texto Aqui"/>
+</div>
+<div class="input-group">
+<label for="textSize">Tamanho</label>
+<input id="textSize" max="100" min="12" type="range" value="32"/>
+</div>
+<div class="input-group">
+<label for="textColor">Cor</label>
+<input id="textColor" type="color" value="#000000"/>
+</div>
+<div class="input-group">
+<label for="textFont">Fonte</label>
+<select id="textFont">
+<option value="Poppins">Poppins</option>
+<option value="Playfair Display">Playfair Display</option>
+<option value="Arial">Arial</option>
+<option value="Impact">Impact</option>
+</select>
+</div>
+</div>
+</div>
+<div class="tab-content" id="controles">
+<div class="panel-section">
+<h4>Controles</h4>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<button class="btn-action" id="btnAddText">Adicionar Texto</button>
+<button class="btn-action" id="btnDelete">Excluir Item</button>
+<button class="btn-action" onclick="changeLayer('bring')">Trazer para Frente</button>
+<button class="btn-action" onclick="changeLayer('send')">Enviar Atrás</button>
+<button class="btn-action" onclick="deleteItem()">Excluir</button>
+<button class="btn-action" onclick="resetStage()">Limpar</button>
+<button class="btn-action" onclick="undo()">Desfazer</button>
+<button class="btn-action" onclick="redo()">Refazer</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function openTab(evt, tabName) {
+    const tabcontent = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].classList.remove('active');
+    }
+    
+    const tablinks = document.getElementsByClassName('tab-button');
+    for (let i = 0; i < tablinks.length; i++) {
+      tablinks[i].classList.remove('active');
+    }
+    
+    document.getElementById(tabName).classList.add('active');
+    evt.currentTarget.classList.add('active');
+  }
+</script>
+
+<script>
+  function openTab(evt, tabName) {
+    const tabcontent = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].classList.remove('active');
+    }
+    
+    const tablinks = document.getElementsByClassName('tab-button');
+    for (let i = 0; i < tablinks.length; i++) {
+      tablinks[i].classList.remove('active');
+    }
+    
+    document.getElementById(tabName).classList.add('active');
+    evt.currentTarget.classList.add('active');
+  }
+</script>
+
+<script>
+  document.querySelectorAll('.accordion').forEach(button => {
+    button.addEventListener('click', function() {
+      this.classList.toggle('active');
+      const panel = this.nextElementSibling;
+      if (panel.style.maxHeight) {
+        panel.style.maxHeight = null;
+      } else {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+      }
+    });
+  });
+</script>
+
+</div>
+<aside class="professional-menu" id="professionalMenu">
+
+
+</aside>
+</div>
+</section>
+<!-- ====== PROFESSIONAL MENU (REFATORADO) ====== -->
+<section class="professional-menu" style="margin-top:30px">
+
+</section>
+<section class="secao" id="biblioteca">
+<h2>🖼️ Biblioteca de Itens (Decoração)</h2>
+<div class="carousel" data-dir="right" data-name="biblioteca">
+<div class="carousel-track" id="bibliotecaTrack"></div>
+</div>
+<h2>🖼️ Papel de Parede</h2>
+<div class="carousel" data-dir="left" data-name="papel_de_parede">
+<div class="carousel-track" id="papel_de_paredeTrack"></div>
+</div>
+<h2>🚪 Portas e Janelas</h2>
+<div class="carousel" data-dir="right" data-name="portas">
+<div class="carousel-track" id="portasTrack"></div>
+</div>
+<h2>🧱 Pisos e Texturas</h2>
+<div class="carousel" data-dir="left" data-name="pisos">
+<div class="carousel-track" id="pisosTrack"></div>
+</div>
+<h2>✨ Temas de Festas</h2>
+<div class="carousel" data-dir="left" data-name="temas">
+<div class="carousel-track" id="temasTrack"></div>
+</div>
+<h2>🎉 Decoração de Festas</h2>
+<div class="carousel" data-dir="right" data-name="decoracao_festas">
+<div class="carousel-track" id="decoracao_festasTrack"></div>
+</div>
+</section>
+<section class="assistente" id="assistente">
+<h2><span class="robot-emoji">🤖</span> Assistente Virtual do IA</h2>
+<div class="ia-box">
+<div class="ia-respostas" id="ia-respostas"></div>
+<div class="ia-input">
+<input id="ia-texto" placeholder="Pergunte sobre as funções do site (ex: como baixar imagem?)..." type="text"/>
+<button class="btn-primary" id="ia-enviar">Enviar</button>
+</div>
+</div>
+</section>
+</main>
+<div id="tourModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; display:flex; justify-content:center; align-items:center;">
+<div id="tourContent" style="background:var(--bg2); padding:30px; border-radius:15px; max-width:600px; width:90%; text-align:center; box-shadow:0 15px 50px rgba(0,0,0,0.5);">
+<h2 style="color:var(--primary-dark); font-family:'Playfair Display', serif; margin-top:0;">Bem-Vindo ao Simulador Profissional! ✨</h2>
+<p style="color:var(--text); font-size:16px;">Transforme seus projetos de decoração em realidade com 4 passos simples:</p>
+<ul style="list-style:none; padding:0; text-align:left; margin:20px 0;">
+<li style="margin-bottom:15px; border-left:4px solid var(--accent); padding-left:10px;"><strong>Passo 1: Upload (🏠)</strong>: Carregue a foto do seu ambiente e as imagens de decoração que deseja usar.</li>
+<li style="margin-bottom:15px; border-left:4px solid var(--primary-light); padding-left:10px;"><strong>Passo 2: Palco (🎨)</strong>: Suas imagens aparecerão no Palco 3D. Clique e arraste para posicioná-las.</li> <li style="margin-bottom:15px; border-left:4px solid var(--primary-dark); padding-left:10px;"><strong>Passo 3: Edição (🛠️)</strong>: Use o menu lateral para ajustar opacidade, rotação, tamanho e cor de fundo.</li>
+<li style="margin-bottom:15px; border-left:4px solid var(--accent); padding-left:10px;"><strong>Passo 4: Biblioteca (🖼️)</strong>: Adicione itens, portas, pisos e temas de festas do nosso catálogo profissional.</li>
+</ul>
+<button class="btn-primary" id="closeTour" style="padding:12px 25px; font-size:16px; margin-top:10px;">Começar a Decorar!</button>
+</div>
+</div>
+<footer class="rodape">
+<p class="rodape-top">Este trabalho é como gerar uma obra de arte! ❤️</p>
+<p class="rodape-sub">Desenvolvido para mentes criativas © 2025</p>
+<p class="rodape-contact">Contato: adm.rute.silva@gmail.com</p>
+</footer>
+<script>
+  
+    /* app.js COMPLETO e CORRIGIDO */
+
+    (function(){
+      
+    /* ---------- Config e Links (Lista completa) ---------- */
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+    const DEFAULT_ENVIRONMENT_URL = "https://i.ibb.co/6P6p4qT/default-ambiente.jpg";
+      // Lista de Links de Carrossel (Links completos reintroduzidos)
+    const LINKS = {
+        banners:[
+            "https://i.postimg.cc/zDc24Qqn/banner1.png",
+            "https://i.postimg.cc/L4bQGWmj/banner2.png"
+        ],
+        biblioteca:[
+            "https://i.postimg.cc/hvXnc7JL/1xg.jpg",
+            "https://i.postimg.cc/0jzvPJ6m/39140-c8ek6oipfd.png",
+            "https://i.postimg.cc/XJHWRgv3/590560797849264.jpg",
+            "https://i.postimg.cc/bJCP7RwB/800564197291108.jpg",
+            "https://i.postimg.cc/hjynk0Gf/976433699207551.jpg",
+            "https://i.postimg.cc/G27RWjpT/images-1.png",
+            "https://i.postimg.cc/KvgbWBhh/images-2.png",
+            "https://i.postimg.cc/dVPFc3JB/images-2025-09-03T205424-846.jpg",
+            "https://i.postimg.cc/ydYBpGsM/images-2025-09-03T205433-322.jpg",
+            "https://i.postimg.cc/g2VWzp0t/images-2025-09-03T205440-930.jpg",
+            "https://i.postimg.cc/13GQmSzJ/images-2025-09-03T205445-897.jpg",
+            "https://i.postimg.cc/mkP4BFck/images-2025-09-03T205507-586.jpg",
+            "https://i.postimg.cc/rmnTB9pD/images-2025-09-03T205526-650.jpg",
+            "https://i.postimg.cc/tJsbpV1B/images-2025-09-03T205552-828.jpg",
+            "https://i.postimg.cc/J0SLn4Jc/images-2025-09-03T205613-225.jpg",
+            "https://i.postimg.cc/qMCrFyVW/images-2025-09-03T205617-910.jpg",
+            "https://i.postimg.cc/3xXT8hwS/images-2025-09-03T205636-146.jpg",
+            "https://i.postimg.cc/Yqm7PYBt/images-2025-09-03T205649-389.jpg",
+            "https://i.postimg.cc/Vkq8fwNq/images-2025-09-03T205655-865.jpg",
+            "https://i.postimg.cc/x8B2CTHp/images-2025-09-03T210708-198.jpg",
+            "https://i.postimg.cc/Vv286Lns/images-2025-09-03T205716-573.jpg",
+            "https://i.postimg.cc/Bn93fbJ1/images-2025-09-03T205724-165.jpg",
+            "https://i.postimg.cc/ryHcggbG/images-2025-09-03T205739-211.jpg",
+            "https://i.postimg.cc/D0RTZys6/images-2025-09-03T205744-208.jpg",
+            "https://i.postimg.cc/SQPqVV5B/images-2025-09-03T205748-599.jpg",
+            "https://i.postimg.cc/G27RWjpb/images-2025-09-03T205753-560.jpg",
+            "https://i.postimg.cc/Y2Pk88V8/images-2025-09-03T205757-969.jpg",
+            "https://i.postimg.cc/zBtNskGQ/images-2025-09-03T205821-710.jpg",
+            "https://i.postimg.cc/HxZmqtLp/images-2025-09-03T205827-601.jpg",
+            "https://i.postimg.cc/hP7nYTRW/images-2025-09-03T205836-860.jpg",
+            "https://i.postimg.cc/C1P034KL/images-2025-09-03T205851-770.jpg",
+            "https://i.postimg.cc/SQPqVV5z/images-2025-09-03T205856-492.jpg",
+            "https://i.postimg.cc/Kzqb65YS/images-2025-09-03T205902-780.jpg",
+            "https://i.postimg.cc/mD2RpnBK/images-2025-09-03T205907-596.jpg",
+            "https://i.postimg.cc/ydQKMT8r/images-2025-09-03T205913-362.jpg",
+            "https://i.postimg.cc/d1HFb901/images-2025-09-03T205930-786.jpg",
+            "https://i.postimg.cc/jq1Kvv9m/images-2025-09-03T205946-001.jpg",
+            "https://i.postimg.cc/jq1Kvv9P/images-2025-09-03T210001-194.jpg",
+            "https://i.postimg.cc/Z5tmznJ3/images-2025-09-03T210025-258.jpg",
+            "https://i.postimg.cc/kG2CqtVK/images-2025-09-03T210035-035.jpg",
+            "https://i.postimg.cc/MZLxtt47/images-2025-09-03T210039-303.jpg",
+            "https://i.postimg.cc/GmwRntbJ/images-2025-09-03T210052-486.jpg",
+            "https://i.postimg.cc/pLbvMrPh/images-2025-09-03T210058-818.jpg",
+            "https://i.postimg.cc/5yDV0NvB/images-2025-09-03T210103-071.jpg",
+            "https://i.postimg.cc/yx2HdY9r/images-2025-09-03T210107-780.jpg",
+            "https://i.postimg.cc/2ygD68v2/images-2025-09-03T210143-235.jpg",
+            "https://i.postimg.cc/4dLGD134/images-2025-09-03T210211-278.jpg",
+            "https://i.postimg.cc/Bn93fbJK/images-2025-09-03T210215-704.jpg",
+            "https://i.postimg.cc/fRnsQyMB/images-2025-09-03T210223-217.jpg",
+            "https://i.postimg.cc/DybhNL3y/images-2025-09-03T210228-499.jpg",
+            "https://i.postimg.cc/prmvRn9y/images-2025-09-03T210232-696.jpg",
+            "https://i.postimg.cc/Tw7xzc3B/images-2025-09-03T210238-718.jpg",
+            "https://i.postimg.cc/J0s8MByD/images-2025-09-03T210301-177.jpg",
+            "https://i.postimg.cc/j2Bb5dPR/images-2025-09-03T210309-604.jpg",
+            "https://i.postimg.cc/zBX52QqY/images-2025-09-03T210316-248.jpg",
+            "https://i.postimg.cc/BbR06QD5/images-2025-09-03T210320-615.jpg",
+            "https://i.postimg.cc/wj8zYM9N/images-2025-09-03T210324-706.jpg",
+            "https://i.postimg.cc/qqNr4Ct2/images-2025-09-03T210336-142.jpg",
+            "https://i.postimg.cc/vZrsYymn/images-2025-09-03T210357-520.jpg",
+            "https://i.postimg.cc/v8KMXXj2/images-2025-09-03T210407-561.jpg",
+            "https://i.postimg.cc/WpyjSSKZ/images-2025-09-03T210411-950.jpg",
+            "https://i.postimg.cc/JzNLr8nL/images-2025-09-03T210427-511.jpg",
+            "https://i.postimg.cc/RZ5mxhvN/images-2025-09-03T210437-099.jpg",
+            "https://i.postimg.cc/T3V6dxwX/images-2025-09-03T210455-441.jpg",
+            "https://i.postimg.cc/Kj1bxgKQ/images-2025-09-03T210502-666.jpg",
+            "https://i.postimg.cc/NjqtvFQQ/images-2025-09-03T210507-353.jpg",
+            "https://i.postimg.cc/hjynk0GB/images-2025-09-03T210520-049.jpg",
+            "https://i.postimg.cc/HWNH33K6/images-2025-09-03T210526-509.jpg",
+            "https://i.postimg.cc/65GKPnx3/images-2025-09-03T210537-198.jpg",
+            "https://i.postimg.cc/j2DTtJWJ/images-2025-09-03T210542-763.jpg",
+            "https://i.postimg.cc/dtTFfrPb/images-2025-09-03T210549-200.jpg",
+            "https://i.postimg.cc/qMCrFyHv/images-2025-09-03T210557-278.jpg",
+            "https://i.postimg.cc/5yXJbFHn/images-2025-09-03T210606-436.jpg",
+            "https://i.postimg.cc/0jzvPJ6Q/images-2025-09-03T210612-035.jpg",
+            "https://i.postimg.cc/V6GwxFN5/images-2025-09-03T210618-706.jpg",
+            "https://i.postimg.cc/Kzqb658d/images-2025-09-03T210626-448.jpg",
+            "https://i.postimg.cc/G3frzzNZ/images-2025-09-03T210631-775.jpg",
+            "https://i.postimg.cc/85KG2bCg/images-2025-09-03T210638-201.jpg",
+            "https://i.postimg.cc/Y2Pk88Vz/images-2025-09-03T210643-540.jpg",
+            "https://i.postimg.cc/L8tp9Ssz/images-2025-09-03T210649-659.jpg",
+            "https://i.postimg.cc/8PrGYMQ3/images-2025-09-03T210655-413.jpg",
+            "https://i.postimg.cc/Rh2BFVKx/images-2025-09-03T210706-042.jpg",
+            "https://i.postimg.cc/D0RTZysR/images-2025-09-03T210753-985.jpg",
+            "https://i.postimg.cc/DfNF55Dj/images-2025-09-03T210815-938.jpg",
+            "https://i.postimg.cc/x1DQV89g/images-2025-09-03T210825-228.jpg",
+            "https://i.postimg.cc/Z5tmznJp/images-2025-09-03T210832-504.jpg",
+            "https://i.postimg.cc/wxrHFFPr/images-2025-09-03T210858-668.jpg",
+            "https://i.postimg.cc/ZYQZjjgX/images-2025-09-03T210912-293.jpg",
+            "https://i.postimg.cc/ZKymQpz0/images-2025-09-03T210919-201.jpg",
+            "https://i.postimg.cc/zGCrzNBm/images-2025-09-03T210934-502.jpg",
+            "https://i.postimg.cc/ZKymQptw/images-2025-09-03T210941-030.jpg",
+            "https://i.postimg.cc/g2FpbjGK/images-2025-09-03T211001-944.jpg",
+            "https://i.postimg.cc/65GKPnxs/images-2025-09-03T211025-262.jpg",
+            "https://i.postimg.cc/K8P2GbzS/images-2025-09-03T211030-613.jpg",
+            "https://i.postimg.cc/MKjwLVJ6/images-2025-09-03T211046-605.jpg",
+            "https://i.postimg.cc/sxbrXDSk/images-2025-09-03T211050-682.jpg",
+            "https://i.postimg.cc/zv4rBXKr/images-2025-09-03T211059-542.jpg",
+            "https://i.postimg.cc/Kzqb65Y8/images-2025-09-03T211106-142.jpg",
+            "https://i.postimg.cc/zXRNQKYJ/images-2025-09-03T211127-399.jpg",
+            "https://i.postimg.cc/jS0TY2Rs/images-2025-09-03T211134-316.jpg",
+            "https://i.postimg.cc/NFZcMfmg/images-2025-09-03T211139-111.jpg",
+            "https://i.postimg.cc/kG2CqtVF/images-2025-09-03T211206-030.jpg",
+            "https://i.postimg.cc/Yqm7PYB7/images-2025-09-03T211209-906.jpg",
+            "https://i.postimg.cc/rwXT2sqm/images-2025-09-03T211230-104.jpg",
+            "https://i.postimg.cc/268m9tCp/images-2025-09-03T211252-942.jpg",
+            "https://i.postimg.cc/gc7d445X/images-2025-09-03T211313-720.jpg",
+            "https://i.postimg.cc/Gt4RdsBT/images-2025-09-03T211321-872.jpg",
+            "https://i.postimg.cc/WzdVTJDp/images-2025-09-03T211329-336.jpg",
+            "https://i.postimg.cc/DwrTvhzD/images-2025-09-03T211344-352.jpg",
+            "https://i.postimg.cc/wM1zgstj/images-2025-09-03T211351-696.jpg",
+            "https://i.postimg.cc/3x5hQN3g/images-2025-09-03T211357-674.jpg",
+            "https://i.postimg.cc/XNP3xxhg/images-2025-09-03T211402-200.jpg",
+            "https://i.postimg.cc/g2VWzp0T/images-2025-09-03T211406-516.jpg",
+            "https://i.postimg.cc/90D2Cq4B/images-2025-09-03T211410-632.jpg",
+            "https://i.postimg.cc/6prXWKQP/images-2025-09-03T211436-652.jpg",
+            "https://i.postimg.cc/zXRNQKZ9/images-2025-09-03T211446-624.jpg",
+            "https://i.postimg.cc/WpyjSSKd/images-2025-09-03T211506-802.jpg",
+            "https://i.postimg.cc/4x6gfG3V/images-2025-09-03T211512-511.jpg",
+            "https://i.postimg.cc/vZFywTGZ/images-2025-09-03T211518-116.jpg",
+            "https://i.postimg.cc/5NFJrLW6/images-2025-09-03T211528-766.jpg",
+            "https://i.postimg.cc/Dwkh307Q/images-2025-09-03T211532-920.jpg",
+            "https://i.postimg.cc/KjC2zvLQ/images-2025-09-03T211539-367.jpg",
+            "https://i.postimg.cc/TwYGNsT6/images-2025-09-03T211546-321.jpg",
+            "https://i.postimg.cc/FzYvNJfV/images-2025-09-03T211609-257.jpg",
+            "https://i.postimg.cc/L5JS2Zqk/images-2025-09-03T211622-462.jpg",
+            "https://i.postimg.cc/pTXxcSPb/images-2025-09-03T211629-671.jpg",
+            "https://i.postimg.cc/1RdPMMT6/images-2025-09-03T211702-049.jpg",
+            "https://i.postimg.cc/7YT4R0rw/images-2025-09-03T211732-589.jpg",
+            "https://i.postimg.cc/sxMzsZBc/images-2025-09-03T211743-064.jpg",
+            "https://i.postimg.cc/j5gTphjw/images-2025-09-03T211756-317.jpg",
+            "https://i.postimg.cc/k41C0y5q/images-2025-09-03T211832-778.jpg",
+            "https://i.postimg.cc/qqWTRMnb/images-2025-09-03T211843-070.jpg",
+            "https://i.postimg.cc/rFtTHx2k/images-2025-09-03T211848-802.jpg",
+            "https://i.postimg.cc/VvJwmbS7/images-2025-09-03T211859-823.jpg",
+            "https://i.postimg.cc/KvgbWBhy/images-3.png",
+            "https://i.postimg.cc/FRWvMxKf/images-4.png",
+            "https://i.postimg.cc/YC6Hr7SQ/images-5.png",
+            "https://i.postimg.cc/gjxpm6ws/minimal-black-wall-clock-png.png",
+            "https://i.postimg.cc/cLyWGCdB/modern-gray-refrigerator-illustration-vector-design-on-transparent-background-free-png.png",
+            "https://i.postimg.cc/gJSpCK00/pngtree-an-ornate-luxurious-sofa-png-image-15430205.png",
+            "https://i.postimg.cc/pLbvMrPd/pngtree-antique-charm-vintage-wooden-cupboard-rustic-elegance-classic-design-isolated-with-png-image.png",
+            "https://i.postimg.cc/7Z84rhqJ/pngtree-golden-wooden-mirror-frame-png-image-12546713.png",
+            "https://i.postimg.cc/3NzTRJmM/pngtree-silver-mini-fridge-illustration-png-image-6472828-1.png",
+            "https://i.postimg.cc/P5WjXHqF/relogio-de-parede-30-x-30-cm-mar-2568br-1567141445-90ff-600x600.png",
+            "https://i.postimg.cc/9Fq2kZ5n/stainless-steel-refrigerator-isolated-on-transparent-background-png.png"
+        ],
+        papel_de_parede: [
+            "https://i.postimg.cc/CKYTQ2S4/4700-89464-std-024149.png",
+            "https://i.postimg.cc/KYFSHWxw/adesivo-decorativo-lua-e-galhos-boho-chique-024142.png",
+            "https://i.postimg.cc/JzjCK8V6/images-48-024152.jpg",
+            "https://i.postimg.cc/5t1dRrbK/images-51-024149.jpg",
+            "https://i.postimg.cc/bw1fLPcg/images-52-024148.jpg",
+            "https://i.postimg.cc/y80CnK4b/images-53-024147.jpg",
+            "https://i.postimg.cc/FH0XGv5q/images-54-024146.jpg",
+            "https://i.postimg.cc/2SnNTYRM/images-55-024145.jpg",
+            "https://i.postimg.cc/ZqZtMQ4H/images-56-024144.jpg",
+            "https://i.postimg.cc/nLZbPWpw/images-57-024144.jpg",
+            "https://i.postimg.cc/pdxb6SR7/images-58-024142.jpg",
+            "https://i.postimg.cc/5t1dRrbh/images-59-024141.jpg",
+            "https://i.postimg.cc/d0vPxfJM/images-60-024140.jpg",
+            "https://i.postimg.cc/tgyQMc9G/images-61-024139.jpg",
+            "https://i.postimg.cc/zf5ZcQq1/images-62-024138.jpg",
+            "https://i.postimg.cc/1zPhjdyP/images-63-024137.jpg",
+            "https://i.postimg.cc/KYFSHWmx/images-64-024136.jpg",
+            "https://i.postimg.cc/VN1QVhzY/images-65-024135.jpg",
+            "https://i.postimg.cc/VkXP4wQD/pngtree-red-brick-pattern-illustration-png-image-6480131-024153.png",
+            "https://i.postimg.cc/zGTYpNZ2/pngtree-transparent-background-texture-seamless-brick-wall-pattern-overlay-png-image-11991950-024202.png"
+        ],
+      portas: [
+            "https://i.postimg.cc/XqsgcpxT/ai-generated-door-interior-isolated-on-transparent-background-free-png.png",
+            "https://i.postimg.cc/Y0r3W1Nf/images-2025-09-03T213517-446.jpg",
+            "https://i.postimg.cc/Y0r3W1NN/images-2025-09-03T213526-229.jpg",
+            "https://i.postimg.cc/HnY2yQ0z/images-2025-09-03T213532-986.jpg",
+            "https://i.postimg.cc/mkLwHQ3Y/images-2025-09-03T213539-087.jpg",
+            "https://i.postimg.cc/QC8bTpgp/images-2025-09-03T213545-473.jpg",
+            "https://i.postimg.cc/BbSgKx51/images-2025-09-03T213605-572.jpg",
+            "https://i.postimg.cc/x8fRzKGk/images-2025-09-03T213611-499.jpg",
+            "https://i.postimg.cc/nrFkDvKL/images-2025-09-03T213618-188.jpg",
+            "https://i.postimg.cc/NFs4H18F/images-2025-09-03T213626-035.jpg",
+            "https://i.postimg.cc/6qW0vdV4/images-2025-09-03T213630-937.jpg",
+            "https://i.postimg.cc/8cpH6hd6/images-2025-09-03T213635-570.jpg",
+            "https://i.postimg.cc/zvzjgnwX/images-2025-09-03T213640-750.jpg",
+            "https://i.postimg.cc/rsVJrSGy/images-2025-09-03T213647-996.jpg",
+            "https://i.postimg.cc/mkLwHQ3T/images-2025-09-03T213705-778.jpg",
+            "https://i.postimg.cc/LXBD5yPJ/images-2025-09-03T213716-482.jpg",
+            "https://i.postimg.cc/4yf59zvZ/images-2025-09-03T213723-692.jpg",
+            "https://i.postimg.cc/DZd60CG8/images-2025-09-03T213858-429.jpg",
+            "https://i.postimg.cc/j5Qc28f5/images-2025-09-03T213902-963.jpg",
+            "https://i.postimg.cc/mDNjkd9r/images-2025-09-03T213911-606.jpg",
+            "https://i.postimg.cc/D0vgXqQ5/images-2025-09-03T224944-810.jpg",
+            "https://i.postimg.cc/D0xcd85G/images-2025-09-03T224951-077.jpg",
+            "https://i.postimg.cc/8cpH6hdt/images-2025-09-03T224957-891.jpg",
+            "https://i.postimg.cc/PJSMzPK1/images-2025-09-03T225009-525.jpg",
+            "https://i.postimg.cc/d359mLnR/images-2025-09-03T225024-653.jpg",
+            "https://i.postimg.cc/SRgG7JVG/images-2025-09-03T225033-324.jpg",
+            "https://i.postimg.cc/wMwkc7Ff/images-2025-09-03T225041-053.jpg",
+            "https://i.postimg.cc/NFdx75bd/images-2025-09-03T225045-765.jpg",
+            "https://i.postimg.cc/fy8vjJ5H/images-2025-09-03T225056-406.jpg",
+            "https://i.postimg.cc/zvxkSVp2/images-2025-09-03T225105-203.jpg",
+            "https://i.postimg.cc/x86PycgB/images-2025-09-03T225111-604.jpg",
+            "https://i.postimg.cc/D0xcd859/images-2025-09-03T225125-879.jpg",
+            "https://i.postimg.cc/mkmSNt8x/images-2025-09-03T225140-100.jpg",
+            "https://i.postimg.cc/QCfqkH0Z/images-2025-09-03T225149-927.jpg",
+            "https://i.postimg.cc/mkmSNt8G/images-2025-09-03T225157-491.jpg",
+            "https://i.postimg.cc/rsf9CKQT/images-2025-09-03T225215-361.jpg",
+            "https://i.postimg.cc/rsf9CKQc/images-2025-09-03T225222-731.jpg",
+            "https://i.postimg.cc/dQ6nKxvL/images-2025-09-03T225251-658.jpg",
+            "https://i.postimg.cc/8k4wV0DF/images-2025-09-03T225309-479.jpg",
+            "https://i.postimg.cc/MZ5t8FxM/images-2025-09-03T225315-272.jpg",
+            "https://i.postimg.cc/MH9Ybvt7/pngtree-wooden-door-png-image-6093732-1.png"
+        ],
+        pisos: [
+            "https://i.postimg.cc/CLDGxrpW/decoracao-024112.jpg",
+            "https://i.postimg.cc/sfMPtD6d/images-67-024133.jpg",
+            "https://i.postimg.cc/VsJ93LG8/images-68-024132.jpg",
+            "https://i.postimg.cc/Y2vNJqnw/images-69-024131.jpg",
+            "https://i.postimg.cc/7P51pYsr/images-70-024130.jpg",
+            "https://i.postimg.cc/NGK8WfJB/images-71-024129.jpg",
+            "https://i.postimg.cc/BZj5dQYQ/images-72-024128.jpg",
+            "https://i.postimg.cc/NGK8WfJL/images-73-024127.jpg",
+            "https://i.postimg.cc/L4GkRKwj/images-74-024126.jpg",
+            "https://i.postimg.cc/y62hB4tx/images-75-024125.jpg",
+            "https://i.postimg.cc/L4GkRKw6/images-76-024125.jpg",
+            "https://i.postimg.cc/sfMPtD6M/images-77-024123.jpg",
+            "https://i.postimg.cc/kMLN93zx/images-79-024123.jpg",
+            "https://i.postimg.cc/CM9CYTXC/images-80-024122.jpg",
+            "https://i.postimg.cc/y62hB4tm/images-81-024121.jpg",
+            "https://i.postimg.cc/T2BjGMFC/images-82-024120.jpg",
+            "https://i.postimg.cc/PrZW5VnQ/images-84-024119.jpg",
+            "https://i.postimg.cc/SN86x1b7/images-85-024118.jpg",
+            "https://i.postimg.cc/wTJXj4Yh/images-86-024117.jpg",
+            "https://i.postimg.cc/Qx5QdYZ1/images-87-024116.jpg",
+            "https://i.postimg.cc/3JpXxfQ9/images-89-024115.jpg",
+            "https://i.postimg.cc/9FTdQgHn/images-90-024114.jpg",
+            "https://i.postimg.cc/CLDGxrp3/images-91-024113.jpg"
+        ],
+        temas: [
+            "https://i.postimg.cc/RV8DjDLz/images-10.jpg",
+            "https://i.postimg.cc/bNMBKB9X/images-11.jpg",
+            "https://i.postimg.cc/xT74W4yW/images-12.jpg",
+            "https://i.postimg.cc/pX76g6Y7/images-13.jpg",
+            "https://i.postimg.cc/28JKPKF2/images-14.jpg",
+            "https://i.postimg.cc/m2q505Np/images-15.jpg",
+            "https://i.postimg.cc/GhN5Z5JP/images-16.jpg",
+            "https://i.postimg.cc/TYS4Z4q0/images-17.jpg",
+            "https://i.postimg.cc/c4jbVbMm/images-18.jpg",
+            "https://i.postimg.cc/MK4FhFbt/images-19.jpg",
+            "https://i.postimg.cc/d0cS0Zft/images-20.jpg",
+            "https://i.postimg.cc/vmwSmxKc/images-21.jpg",
+            "https://i.postimg.cc/FKXnKk61/images-22.jpg",
+            "https://i.postimg.cc/3xvc7FtD/images-23.jpg",
+            "https://i.postimg.cc/qv350x1N/images-24.jpg",
+            "https://i.postimg.cc/dVyxvj4p/images-25.jpg",
+            "https://i.postimg.cc/kgbp9vTr/images-27.jpg",
+            "https://i.postimg.cc/sghNy4Tv/images-28.jpg",
+            "https://i.postimg.cc/wjmGHQw9/images-29.jpg",
+            "https://i.postimg.cc/3J6cPcFT/images-30.jpg",
+            "https://i.postimg.cc/QMZnMKzS/images-31.jpg",
+            "https://i.postimg.cc/6Qx1Q4Pj/images-32.jpg",
+            "https://i.postimg.cc/5tWktQrm/images-33.jpg"
+        ],
+        decoracao_festas: [
+            "https://i.postimg.cc/FKfcwTp2/birthday-party-single-decoratibe-hat-11502410-png-w700wp.webp",
+            "https://i.postimg.cc/PqBZH1VS/black-gold-helium-balloons-elegant-stylish-party-decoration-11603617-png-w700wp.webp",
+            "https://i.postimg.cc/5tHvDsgq/images-34.jpg",
+            "https://i.postimg.cc/5tHvDsgB/images-35.jpg",
+            "https://i.postimg.cc/GpBY6XKG/images-36.jpg",
+            "https://i.postimg.cc/CKZD9c7B/images-37.jpg",
+            "https://i.postimg.cc/g0wR1gsx/images-38.jpg",
+            "https://i.postimg.cc/kgYKj0Qx/images-39.jpg",
+            "https://i.postimg.cc/cJKYPFhr/images-40.jpg",
+            "https://i.postimg.cc/LsqfGxDy/images-41.jpg",
+            "https://i.postimg.cc/QMB5vfmm/images-42.jpg",
+            "https://i.postimg.cc/yNJ92LjT/images-43.jpg",
+            "https://i.postimg.cc/DzWsRx6P/images-44.jpg",
+            "https://i.postimg.cc/k5V8LTsW/images-45.jpg",
+            "https://i.postimg.cc/bvGb4mgQ/images-46.jpg",
+            "https://i.postimg.cc/XvZFtsL1/images-47.jpg",
+            "https://i.postimg.cc/sgH7nkYQ/images-51.jpg",
+            "https://i.postimg.cc/K8pB96Pj/images-52.jpg",
+            "https://i.postimg.cc/8zXMy2R7/images-53.jpg",
+            "https://i.postimg.cc/jS3P8pHW/images-54.jpg",
+            "https://i.postimg.cc/GmgGMWFG/images-55.jpg",
+            "https://i.postimg.cc/8CFWxZ43/images-56.jpg",
+            "https://i.postimg.cc/GpBY6XKV/images-57.jpg",
+            "https://i.postimg.cc/8CFWxZ4K/images-58.jpg",
+            "https://i.postimg.cc/W4Drx58y/images-59.jpg",
+            "https://i.postimg.cc/6pbnHkrC/pngtree-a-flower-arch-with-pink-and-purple-flowers-on-it-png-image-13182110.png"
+        ]
+    };
+    
+    let selectedItem = null;
+    let isDragging = false;
+    let offset = { x: 0, y: 0 };
+    let layerContainer = $("#layerContainer");
+    let zIndexCounter = 10;
+    let stateHistory = []; // Stack para estados de Undo/Redo
+    let currentStateIndex = -1; // Índice do estado atual no histórico
+    
+    /* ---------- Funções de Core e Edição 2D ---------- */
+    // NOVO: Funções de Estado (Undo/Redo)
+    function saveState() {
+        if (currentStateIndex < stateHistory.length - 1) {
+            stateHistory = stateHistory.slice(0, currentStateIndex + 1);
+        }
+        // Captura o estado atual
+        const stageContent = {
+            layerHTML: layerContainer.innerHTML,
+            envSrc: $("#envBg").src,
+            colorOverlay: $("#colorOverlay").style.backgroundColor,
+            colorOpacity: $("#colorOverlay").style.opacity,
+        };
+        stateHistory.push(stageContent);
+        currentStateIndex++;
+        if (stateHistory.length > 20) {
+            stateHistory.shift();
+            currentStateIndex--;
+        }
+    }
+      function restoreState(index) {
+        if (index < 0 || index >= stateHistory.length) return;
+        currentStateIndex = index;
+        const state = stateHistory[currentStateIndex];
+        
+        // Restaura o conteúdo
+        layerContainer.innerHTML = state.layerHTML;
+        $("#envBg").src = state.envSrc;
+        $("#colorOverlay").style.backgroundColor = state.colorOverlay;
+        $("#colorOverlay").style.opacity = state.colorOpacity;
+        
+        // Recalcula o zIndex e o item selecionado
+        selectedItem = null;
+        selectItem(null);
+    }
+    
+    function undo() {
+        if (currentStateIndex > 0) {
+            restoreState(currentStateIndex - 1);
+        }
+    }
+    
+    function redo() {
+        if (currentStateIndex < stateHistory.length - 1) {
+            restoreState(currentStateIndex + 1);
+        }
+    }
+    
+    function setEnvironmentImage(src){
+        const envBg = $("#envBg");
+        if(envBg) envBg.src = src;
+    }
+
+    function createDecItem(src, isText = false){
+        if(!layerContainer) return;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'dec-item';
+        itemDiv.style.zIndex = ++zIndexCounter;
+        itemDiv.style.left = '50%';
+        itemDiv.style.top = '50%';
+        itemDiv.style.transform = 'translate(-50%, -50%)';
+        
+        if (isText) {
+            itemDiv.dataset.type = 'text';
+            itemDiv.style.width = '200px';
+            itemDiv.style.height = '40px';
+            itemDiv.style.color = $('#textColor').value;
+            itemDiv.style.fontSize = $('#textSize').value + 'px';
+            itemDiv.style.fontFamily = $('#textFont').value;
+
+            const textContent = document.createElement('p');
+            textContent.textContent = $('#textInput').value;
+            itemDiv.appendChild(textContent);
+            itemDiv.dataset.text = $('#textInput').value;
+            
+        } else {
+            itemDiv.dataset.type = 'image';
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Decoração';
+            itemDiv.appendChild(img);
+            itemDiv.dataset.width = '100'; // Valor padrão para controles de slider
+            itemDiv.dataset.height = '100';
+            itemDiv.dataset.rotate = '0';
+            itemDiv.dataset.opacity = '100'; 
+        }
+
+        itemDiv.addEventListener('mousedown', startDrag);
+        itemDiv.addEventListener('touchstart', startDrag);
+        itemDiv.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectItem(itemDiv);
+        });
+
+        layerContainer.appendChild(itemDiv);
+        selectItem(itemDiv); 
+        saveState();
+    }
+    
+    function selectItem(item){
+        $$('.dec-item').forEach(i => i.classList.remove('selected'));
+        selectedItem = item;
+
+        const infoEl = $("#selectedInfo");
+        const imgControls = $("#itemControls");
+        const textControls = $("#textControls");
+
+        if(item){
+            item.classList.add('selected');
+            infoEl.textContent = `Item Selecionado: ${item.dataset.type === 'text' ? 'Texto' : 'Imagem'}`;
+            
+            // Toggle controls visibility
+            if (item.dataset.type === 'image') {
+                imgControls.classList.remove('hidden');
+                textControls.classList.add('hidden');
+                updateControlsForSelectedItem(item);
+            } else if (item.dataset.type === 'text') {
+                imgControls.classList.remove('hidden'); // Ainda precisamos de opacidade, rotação, etc.
+                textControls.classList.remove('hidden');
+                updateControlsForSelectedItem(item);
+            }
+        } else {
+            infoEl.textContent = 'Nenhum item selecionado';
+            imgControls.classList.add('hidden'); 
+            textControls.classList.add('hidden');
+        }
+    }
+
+    function updateControlsForSelectedItem(item){
+        if (item.dataset.type === 'image') {
+            const rotValue = item.style.transform.match(/rotate\(([-+]?\d+)deg\)/);
+            $("#ctlRotate").value = rotValue ? parseInt(rotValue[1]) : 0;
+            $("#ctlOpacity").value = parseFloat(item.style.opacity || 1) * 100;
+            $("#ctlWidth").value = item.dataset.width || 100;
+            $("#ctlHeight").value = item.dataset.height || 100;
+        } else if (item.dataset.type === 'text') {
+            $("#textInput").value = item.dataset.text || item.querySelector('p').textContent;
+            $("#textSize").value = parseInt(item.style.fontSize || 32);
+            $("#textColor").value = item.style.color || '#000000';
+            $("#textFont").value = item.style.fontFamily || 'Poppins';
+            
+            // Text items also need image controls updated
+            const rotValue = item.style.transform.match(/rotate\(([-+]?\d+)deg\)/);
+            $("#ctlRotate").value = rotValue ? parseInt(rotValue[1]) : 0;
+            $("#ctlOpacity").value = parseFloat(item.style.opacity || 1) * 100;
+            $("#ctlWidth").value = item.dataset.width || 100;
+            $("#ctlHeight").value = item.dataset.height || 100;
+        }
+    }
+      function deleteItem(){
+        if(selectedItem){
+            selectedItem.remove();
+            selectedItem = null;
+            selectItem(null);
+            saveState();
+        }
+    }
+
+    function applyStyle(style, value){
+        if(selectedItem){
+            if(style === 'opacity') {
+                selectedItem.style.opacity = value;
+            } else if (style === 'rotate') {
+                const currentTransform = selectedItem.style.transform.replace(/translate\([^)]+\)/, '').replace(/rotate\([^)]+\)/, '').trim();
+                selectedItem.style.transform = `${currentTransform} rotate(${value}deg)`;
+            } else if (style === 'width' || style === 'height') {
+                selectedItem.dataset[style] = value;
+                selectedItem.style[style] = `${value}%`;
+            }
+            saveState();
+        }
+    }
+    
+    function applyTextStyle(style, value){
+        if(selectedItem && selectedItem.dataset.type === 'text'){
+            const p = selectedItem.querySelector('p');
+            if(style === 'text') {
+                p.textContent = value;
+                selectedItem.dataset.text = value;
+            } else if (style === 'size') {
+                selectedItem.style.fontSize = `${value}px`;
+            } else if (style === 'color') {
+                selectedItem.style.color = value;
+            } else if (style === 'font') {
+                selectedItem.style.fontFamily = value;
+            }
+            saveState();
+        }
+    }
+
+    // Z-index controls
+    function changeLayer(direction) {
+        if (!selectedItem) return;
+        let currentZIndex = parseInt(selectedItem.style.zIndex);
+        if (direction === 'bring') {
+            selectedItem.style.zIndex = ++zIndexCounter;
+        } else if (direction === 'send') {
+            const minZIndex = 11;
+            if (currentZIndex > minZIndex) {
+                selectedItem.style.zIndex = minZIndex;
+            }
+        }
+        saveState();
+    }
+    
+    function resetStage(){
+        if(confirm("Tem certeza que deseja limpar todos os itens de decoração do palco?")){
+            layerContainer.innerHTML = '';
+            selectedItem = null;
+            selectItem(null);
+            zIndexCounter = 10;
+            saveState();
+        }
+    }
+
+    /* ---------- Funções de Interação (Drag and Drop) ---------- */
+    let stage = $("#stage");
+    if (stage) {
+        stage.addEventListener('mousedown', startDrag);
+        stage.addEventListener('mousemove', drag);
+        stage.addEventListener('mouseup', stopDrag);
+        stage.addEventListener('touchstart', startDrag);
+        stage.addEventListener('touchmove', drag);
+        stage.addEventListener('touchend', stopDrag);
+        stage.addEventListener('click', (e) => {
+            // Desseleciona se clicar fora de um item, mas dentro do stage
+            if (e.target.id === 'stage' || e.target.id === 'envBg' || e.target.id === 'colorOverlay') {
+                selectItem(null);
+            }
+        });
+    }
+
+    function startDrag(e) {
+        if (!selectedItem || e.target !== selectedItem) {
+            if (e.target.closest('.dec-item') && selectedItem !== e.target.closest('.dec-item')) {
+                selectItem(e.target.closest('.dec-item'));
+            }
+            if (e.target.id === 'stage' || e.target.id === 'envBg' || e.target.id === 'colorOverlay') return;
+        }
+        
+        e.preventDefault(); 
+        isDragging = true;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const rect = selectedItem.getBoundingClientRect();
+        
+        offset.x = clientX - rect.left;
+        offset.y = clientY - rect.top;
+
+        selectedItem.style.cursor = 'grabbing';
+        selectedItem.style.transition = 'none';
+        selectedItem.style.touchAction = 'none'; // Impede o scroll durante o arrasto
+    }
+
+    function drag(e) {
+        if (!isDragging || !selectedItem) return;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const stageRect = stage.getBoundingClientRect();
+
+        let newLeft = clientX - stageRect.left - offset.x;
+        let newTop = clientY - stageRect.top - offset.y;
+
+        // Limita o item dentro do palco (melhoria de UX)
+        const itemRect = selectedItem.getBoundingClientRect();
+        
+        newLeft = Math.max(0, Math.min(newLeft, stageRect.width - itemRect.width));
+        newTop = Math.max(0, Math.min(newTop, stageRect.height - itemRect.height));
+
+        const leftPercent = (newLeft / stageRect.width) * 100;
+        const topPercent = (newTop / stageRect.height) * 100;
+
+        selectedItem.style.left = `${leftPercent}%`;
+        selectedItem.style.top = `${topPercent}%`;
+        
+        // Remove a transformação translate para evitar conflito com left/top
+        selectedItem.style.transform = selectedItem.style.transform.replace(/translate\([^)]+\)/, '').trim() || 'none';
+    }
+
+    function stopDrag() {
+        if (isDragging) {
+            isDragging = false;
+            if(selectedItem){
+                selectedItem.style.cursor = 'grab';
+                selectedItem.style.transition = 'box-shadow 0.1s ease';
+                selectedItem.style.touchAction = 'auto'; // Restaura a ação de toque no item
+                saveState();
+            }
+        }
+    }
+      /* ---------- Funções de Paleta e Pintura (Pintura 3D) ---------- */
+    function setupColorSwatches(){
+        // Lista atualizada para 21 cores (7 cores por linha x 3 linhas = 21) para "preencher as 3 linhas"
+        const colors = [
+            "#ffffff", "#f5f5f5", "#e5e5e5", "#cbd5e1", "#9ca3af", "#4b5563", "#1f2937", 
+            "#ef4444", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#f43f5e", 
+            "#FFC0CB", "#800080", "#00FFFF", "#000000", "#A9A9A9", "#DAA520", "#3CB371"
+        ];
+        const swatchesContainer = $("#swatches");
+        colors.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'swatch';
+            swatch.style.backgroundColor = color;
+            swatch.title = color;
+            swatch.addEventListener('click', () => {
+                $("#colorPicker").value = color;
+                applyStageColor(color);
+            });
+            swatchesContainer.appendChild(swatch);
+        });
+    }
+
+    function applyStageColor(color){
+        const overlay = $("#colorOverlay");
+        if(overlay) {
+            overlay.style.backgroundColor = color;
+            overlay.style.opacity = (color === 'transparent' || color === '#ffffff') ? 0 : 1;
+            saveState();
+        }
+    }
+    
+    function resetStageColor(){
+        const overlay = $("#colorOverlay");
+        if(overlay) {
+            overlay.style.backgroundColor = 'transparent';
+            overlay.style.opacity = 0;
+            saveState();
+        }
+    }
+
+    /* ---------- Funções de Upload e Interface (CORRIGIDO: Timing e Fadeout 5s) ---------- */
+    function showStatus(elementId, message, isSuccess = true) {
+        const el = $(elementId);
+        if (el) {
+            el.textContent = message;
+            el.classList.remove('success', 'show'); // Reset
+            if (isSuccess) el.classList.add('success');
+            el.classList.add('show');
+            setTimeout(() => {
+                el.classList.remove('show');
+            }, 5000); 
+        }
+    }
+
+    function handleFileSelect(e) {
+        const files = Array.from(e.target.files);
+        const inputId = e.target.id;
+
+        if (inputId === 'fileAmbiente') {
+            if (files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    setEnvironmentImage(e.target.result);
+                    showStatus('#ambientMsg', 'Imagem de ambiente carregada!', true);
+                    saveState();
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        } else if (inputId === 'fileDecoracao') {
+            if (files.length > 0) {
+                // Armazena temporariamente os arquivos para serem inseridos no palco
+                localStorage.setItem('pendingDecorations', JSON.stringify(files.map(f => ({ name: f.name, type: f.type }))));
+                // O FileReader é lento para múltiplos, fazemos o "upload" no clique do botão.
+                showStatus('#decorMsg', `${files.length} imagens de decoração prontas para inserir!`, true);
+            }
+        }
+    }
+    
+    function startInsertion() {
+        const ambienteInput = $("#fileAmbiente");
+        const decorInput = $("#fileDecoracao");
+        const anim = $("#insertingAnim");
+        
+        let hasNewFiles = false;
+
+        // 1. Verifica e insere novo ambiente, se houver
+        if (ambienteInput.files.length > 0) {
+            // A imagem do ambiente já foi carregada via handleFileSelect, só precisamos resetar o input
+            ambienteInput.value = '';
+            showStatus('#ambientMsg', 'Ambiente atualizado!', true);
+            hasNewFiles = true;
+        }
+
+        // 2. Insere as decorações pendentes, se houver
+        if (decorInput.files.length > 0) {
+            anim.classList.remove('hidden'); // Mostra animação de inserção
+            hasNewFiles = true;
+
+            // Simula o tempo de processamento/inserção
+            setTimeout(() => {
+                Array.from(decorInput.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        createDecItem(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                decorInput.value = ''; // Limpa o input após a "inserção"
+                anim.classList.add('hidden');
+                showStatus('#decorMsg', 'Imagens de decoração inseridas com sucesso!', true);
+                saveState(); 
+                document.getElementById('visual').scrollIntoView({ behavior: 'smooth' });
+            }, 1500); // 1.5s para simular o processamento
+        }
+        
+        if (!hasNewFiles) {
+             showStatus('#insertingAnim', 'Nenhuma imagem nova para enviar.', false);
+        }
+    }
+    
+    // Funções de I/O (Download e Share - Corrigido e Revisado)
+    function shareOnWhatsapp() {
+        // Compartilhar para WhatsApp
+        const message = encodeURIComponent(
+            "✨ Confira a decoração incrível que eu criei com o Simulador Profissional da Rute! Clique no link abaixo e comece a editar seu próprio ambiente agora mesmo:\n\n" + window.location.href.split('#')[0] // Envia apenas a URL base
+        );
+        const whatsappUrl = `https://wa.me/?text=${message}`;
+        window.open(whatsappUrl, '_blank'); // Abre em nova aba sem prompts
+    }
+
+    function downloadImage() {
+        if (!stage) return;
+        const menu = $("#professionalMenu");
+        const statusEl = $("#downloadStatus");
+        const selected = selectedItem;
+
+        // Esconde o menu e a borda de seleção para a captura
+        if (selected) selected.classList.remove('selected');
+        menu.style.display = 'none';
+
+        html2canvas(document.getElementById('visualContentContainer'), {
+            allowTaint: true,
+            useCORS: true,
+            scale: 2 
+        }).then(canvas => {
+            // 1. Restaura o menu e a seleção
+            menu.style.display = 'flex';
+            if (selected) selected.classList.add('selected');
+
+            // 2. Download automático
+            const link = document.createElement('a');
+            link.download = 'simulacao-rute.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            // 3. Exibe a mensagem de sucesso (verde)
+            statusEl.textContent = 'Download concluído com sucesso!';
+            statusEl.classList.add('show', 'success');
+
+            // 4. Faz a mensagem desaparecer após 4s
+            setTimeout(() => {
+                statusEl.classList.remove('show', 'success');
+                statusEl.textContent = '';
+            }, 4000);
+        }).catch(err => {
+            console.error("Erro ao gerar imagem para download:", err);
+            statusEl.textContent = 'Erro ao tentar baixar a imagem.';
+            statusEl.classList.add('show');
+            setTimeout(() => { statusEl.classList.remove('show'); statusEl.textContent = ''; }, 4000);
+            
+            // Garante que o menu seja restaurado mesmo em caso de erro
+            menu.style.display = 'flex';
+            if (selected) selected.classList.add('selected');
+        });
+    }
+
+    /* ---------- Funções da Biblioteca (Carrosséis) ---------- */
+    function populateCarousels() {
+        for (const key in LINKS) {
+            if (key !== 'banners') {
+                const track = $(`#${key}Track`);
+                if (track) {
+                    LINKS[key].forEach(url => {
+                        const item = document.createElement('div');
+                        item.className = 'item';
+                        item.innerHTML = `<img src="${url}" alt="Item de ${key}">`;
+                        item.addEventListener('click', () => {
+                            createDecItem(url);
+                        });
+                        track.appendChild(item);
+                    });
+                }
+            }
+        }
+    }
+    
+    function startCarouselAutoscroll() {
+        $$('.carousel').forEach(carousel => {
+            const track = carousel.querySelector('.carousel-track');
+            const direction = carousel.dataset.dir === 'right' ? 1 : -1;
+            const scrollStep = 10; 
+
+            function scrollPage() {
+                const trackWidth = track.scrollWidth;
+                const clientWidth = track.clientWidth;
+
+                if (direction === 1) {
+                    if (track.scrollLeft + clientWidth >= trackWidth - 10) {
+                        track.scrollLeft = 0;
+                    } else {
+                        track.scrollLeft += scrollStep;
+                    }
+                } else {
+                    if (track.scrollLeft <= 10) {
+                        track.scrollLeft = trackWidth - clientWidth;
+                    } else {
+                        track.scrollLeft -= scrollStep;
+                    }
+                }
+            }
+            let scrollInterval = setInterval(scrollPage, 4000);
+            
+            // Interação do usuário para pausar
+            track.addEventListener('mouseenter', () => clearInterval(scrollInterval));
+            track.addEventListener('mouseleave', () => scrollInterval = setInterval(scrollPage, 4000));
+            track.addEventListener('touchstart', () => clearInterval(scrollInterval));
+            track.addEventListener('touchend', () => scrollInterval = setInterval(scrollPage, 4000));
+        });
+    }
+
+    /* ---------- Funções do Assistente IA (Aprimoradas e Reintroduzidas) ---------- */
+    function addIAMessage(text, isUser = false) {
+        const iaResp = $("#ia-respostas");
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'ia-msg';
+        msgDiv.innerHTML = `<strong>${isUser ? 'Você' : '🤖 Rute IA'}</strong>: ${text}`;
+        iaResp.appendChild(msgDiv);
+        iaResp.scrollTop = iaResp.scrollHeight;
+    }
+
+    const IA_RESPONSES = {
+        'saudacao': [
+            "Olá! É ótimo ter você aqui. Como posso te ajudar a criar uma decoração incrível hoje?",
+            "Oi! Sou a Rute IA, sua assistente profissional. Me diga sua dúvida sobre o simulador.",
+            "Saudações! Tudo bem com você? Estou pronta para responder qualquer pergunta sobre as funcionalidades do site."
+        ],
+        'download': "Para baixar sua imagem, clique no botão <span class='btn-primary'>⬇️ Baixar imagem</span>. O download é automático e a imagem é salva como PNG no seu dispositivo.",
+        'upload': "Você pode fazer o upload de novas imagens na seção 'Upload' no topo. A mensagem 'Imagens de decoração prontas para inserir!' aparece ao selecionar o arquivo, e a inserção é feita após clicar em <span class='btn-primary'>Enviar Imagens</span>.",
+        'pintura': "A função <span style='color:var(--primary-dark);'>🎨 Pintura 3D</span> permite colorir as paredes da sua foto de ambiente sem remover a textura ou o fundo, criando um efeito realista. Escolha uma cor e clique em 'Aplicar Cor'. Use <span class='btn-action'>Remover Cor</span> para voltar ao original.",
+        'edicao': "No menu 'Edição Rápida', clique em qualquer item de decoração para selecioná-lo. Você pode ajustar opacidade, rotação, tamanho, e usar os botões <span class='btn-action'>Trazer para frente</span> ou <span class='btn-action'>Enviar atrás</span> para controlar as camadas (Z-index).",
+        'texto': "O botão <span class='btn-action'>Adicionar Texto</span> cria uma caixa de texto no Palco. Após clicar nela, você pode ajustar o conteúdo, tamanho, cor e fonte usando os controles na seção 'Ajustes (Texto)'.",
+        'biblioteca': "A seção 'Biblioteca' está dividida em carrosséis (Decoração, Papel de Parede, Portas, Pisos, etc.). Basta clicar em qualquer item do carrossel para adicioná-lo instantaneamente à sua simulação.",
+        'compartilhar': "Para compartilhar sua arte, clique em <span class='btn-primary'>📤 Compartilhar minha obra de arte</span>. Você será direcionado(a) ao WhatsApp com uma mensagem e o link de convite.",
+        'limpar': "O botão <span class='btn-action'>Limpar Itens</span> remove todos os objetos de decoração do Palco, mas mantém sua imagem de ambiente e a cor de pintura intactas.",
+        'padrao': "Desculpe, não consegui encontrar a resposta para essa pergunta. Por favor, tente perguntar sobre uma funcionalidade específica (ex: 'Como eu uso o Desfazer?' ou 'Fale sobre a Pintura 3D?')."
+    };
+
+    function handleIAQuery() {
+        const input = $("#ia-texto");
+        const query = input.value.trim().toLowerCase();
+        if (!query) return;
+
+        addIAMessage(query, true);
+        input.value = '';
+
+        let responseKey = 'padrao';
+
+        if (query.match(/olá|ola|oi|bom dia|boa tarde|boa noite|e aí|tudo bem|ajuda/)) {
+            responseKey = 'saudacao';
+        } else if (query.match(/baixar|download|salvar imagem/)) {
+            responseKey = 'download';
+        } else if (query.match(/upload|subir imagem|adicionar imagem|enviar/)) {
+            responseKey = 'upload';
+        } else if (query.match(/pintura|cor de fundo|mudar cor|pintura 3d|3d/)) {
+            responseKey = 'pintura';
+        } else if (query.match(/editar|edicao|ajustar|tamanho|girar|rotacao|opacidade|desfazer|refazer|camadas|z-index/)) {
+            responseKey = 'edicao';
+        } else if (query.match(/texto|adicionar texto|escrever|fonte/)) {
+            responseKey = 'texto';
+        } else if (query.match(/biblioteca|carrossel|itens|portas|pisos|móveis|parede|temas/)) {
+            responseKey = 'biblioteca';
+        } else if (query.match(/compartilhar|whatsapp|link/)) {
+            responseKey = 'compartilhar';
+        } else if (query.match(/limpar|resetar/)) {
+            responseKey = 'limpar';
+        }
+        
+        let responseText = IA_RESPONSES[responseKey];
+        if (Array.isArray(responseText)) {
+            responseText = responseText[Math.floor(Math.random() * responseText.length)];
+        }
+        
+        setTimeout(() => addIAMessage(responseText), 500);
+    }
+    
+    // Funções do Tour Inicial
+    function initTour() {
+        const modal = $("#tourModal");
+        const closeButton = $("#closeTour");
+        
+        if (modal && closeButton) {
+            // Verifica se o tour já foi visto (uso básico de localStorage)
+            if (localStorage.getItem('simuladorTourSeen') !== 'true') {
+                modal.style.display = 'flex';
+                closeButton.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    localStorage.setItem('simuladorTourSeen', 'true');
+                });
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+    }
+
+    /* ---------- Configuração Inicial ---------- */
+    function setupEventListeners(){
+        // File Upload
+        $("#fileAmbiente").addEventListener('change', handleFileSelect);
+        $("#fileDecoracao").addEventListener('change', handleFileSelect);
+        $("#btnEnviar").addEventListener('click', startInsertion);
+        
+        // Stage Actions
+        $("#btnNewProject").addEventListener('click', () => { if(confirm("Deseja realmente iniciar um novo projeto (limpar palco e fundo)?")) { setEnvironmentImage(DEFAULT_ENVIRONMENT_URL); resetStageColor(); resetStage(); } });
+        $("#btnShare").addEventListener('click', shareOnWhatsapp);
+        $("#btnDownload").addEventListener('click', downloadImage);
+        
+        // Pintura 3D
+        $("#aplicarCor").addEventListener('click', () => applyStageColor($("#colorPicker").value));
+        $("#btnResetColor").addEventListener('click', resetStageColor);
+        $("#colorPicker").addEventListener('change', (e) => applyStageColor(e.target.value));
+
+        // Item Controls
+        $("#btnAddText").addEventListener('click', () => createDecItem('Text Item', true));
+        $("#btnDelete").addEventListener('click', deleteItem);
+        $("#btnResetStage").addEventListener('click', resetStage);
+        $("#btnBring").addEventListener('click', () => changeLayer('bring'));
+        $("#btnSend").addEventListener('click', () => changeLayer('send'));
+
+        // Undo/Redo Controls
+        $("#btnUndo").addEventListener('click', undo);
+        $("#btnRedo").addEventListener('click', redo);
+
+        // Input Controls (Image)
+        $("#ctlOpacity").addEventListener('change', (e) => applyStyle('opacity', e.target.value / 100));
+        $("#ctlRotate").addEventListener('change', (e) => applyStyle('rotate', e.target.value));
+        $("#ctlWidth").addEventListener('change', (e) => applyStyle('width', e.target.value));
+        $("#ctlHeight").addEventListener('change', (e) => applyStyle('height', e.target.value));
+
+        // Text Controls
+        $("#textInput").addEventListener('input', (e) => applyTextStyle('text', e.target.value));
+        $("#textSize").addEventListener('change', (e) => applyTextStyle('size', e.target.value));
+        $("#textColor").addEventListener('change', (e) => applyTextStyle('color', e.target.value));
+        $("#textFont").addEventListener('change', (e) => applyTextStyle('font', e.target.value));
+        
+        // IA Controls 
+        $("#ia-enviar").addEventListener('click', handleIAQuery);
+        $("#ia-texto").addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleIAQuery();
+            }
+        });
+        
+        selectItem(null);
+        setEnvironmentImage(DEFAULT_ENVIRONMENT_URL);
+    }
+    
+    function init(){
+        setupColorSwatches();
+        populateCarousels();
+        setupEventListeners();
+        startCarouselAutoscroll();
+        initTour(); 
+        
+        // Inicializa a IA e salva o primeiro estado
+        addIAMessage(IA_RESPONSES.saudacao[0]); 
+        saveState(); 
+    }
+    
+    // Inicia a aplicação após o carregamento do DOM
+    document.addEventListener('DOMContentLoaded', init);
+
+    })(); 
+  </script>
+<!-- ====== 3D ROTATION FOR DECOR ITEMS (NON-DESTRUCTIVE) ====== -->
+<script>
+(function(){
+  let active=false, startX=0, rotY=0, target=null;
+
+  function onDown(e){
+    const item = e.target.closest('.dec-item');
+    if(!item) return;
+    target = item;
+    active=true;
+    startX = (e.touches?e.touches[0].clientX:e.clientX);
+    item.style.transformStyle='preserve-3d';
+  }
+
+  function onMove(e){
+    if(!active || !target) return;
+    const x = (e.touches?e.touches[0].clientX:e.clientX);
+    const dx = x - startX;
+    rotY += dx * 0.4;
+    target.style.transform = `rotateY(${rotY}deg)`;
+    startX = x;
+  }
+
+  function onUp(){ active=false; target=null; }
+
+  document.addEventListener('mousedown', onDown);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchstart', onDown, {passive:true});
+  document.addEventListener('touchmove', onMove, {passive:true});
+  document.addEventListener('touchend', onUp);
+})();
+</script>
+<script>
+(function(){
+  document.querySelectorAll('.carousel-track').forEach(track=>{
+    track.style.scrollBehavior='auto';
+    let isDown=false,startX,scrollLeft;
+
+    track.addEventListener('mousedown',e=>{
+      isDown=true;
+      startX=e.pageX-track.offsetLeft;
+      scrollLeft=track.scrollLeft;
+    });
+    track.addEventListener('mouseleave',()=>isDown=false);
+    track.addEventListener('mouseup',()=>isDown=false);
+    track.addEventListener('mousemove',e=>{
+      if(!isDown) return;
+      e.preventDefault();
+      const x=e.pageX-track.offsetLeft;
+      const walk=(x-startX)*1.2;
+      track.scrollLeft=scrollLeft-walk;
+    });
+
+    track.addEventListener('touchstart',e=>{
+      isDown=true;
+      startX=e.touches[0].pageX-track.offsetLeft;
+      scrollLeft=track.scrollLeft;
+    });
+    track.addEventListener('touchend',()=>isDown=false);
+    track.addEventListener('touchmove',e=>{
+      if(!isDown) return;
+      const x=e.touches[0].pageX-track.offsetLeft;
+      const walk=(x-startX)*1.2;
+      track.scrollLeft=scrollLeft-walk;
+    });
+
+    // auto loop
+    setInterval(()=>{
+      track.scrollLeft += 2;
+      if(track.scrollLeft >= track.scrollWidth - track.clientWidth){
+        track.scrollLeft = 0;
+      }
+    },20);
+  });
+})();
+</script>
+
+<script>
+  document.getElementById('closeTour').addEventListener('click', function() {
+    document.getElementById('tourModal').style.display = 'none';
+  });
+</script>
+</body>
+</html>
