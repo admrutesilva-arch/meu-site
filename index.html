@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Simulador de Decoração Profissional - Rute Alves Oficial</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+    :root{
+      --primary-light:#4299e1; --primary-dark:#0c4a6e;
+      --bg1:#f8f9fb; --bg2:#ffffff; --card:#ffffff;
+      --muted:#6b7280; --accent:#10b981; --text:#0b1220;
+      --footer-dark1: #0d416b; --footer-dark2: #0b1220; 
+    }
+    *{box-sizing:border-box}
+    body{font-family:Poppins, sans-serif; margin:0; background:var(--bg1); color:var(--text); overflow-x:hidden; -webkit-font-smoothing:antialiased;}
+
+    /* Topo Premium */
+    .topo{position:sticky; top:0; z-index:999; background:linear-gradient(90deg, var(--footer-dark1), var(--footer-dark2)); padding:12px; display:flex; justify-content:center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);}
+    .menu{display:flex; gap:20px; flex-wrap:wrap; justify-content:center;} 
+    .menu a{color:#fff; text-decoration:none; font-size:14px; font-weight:500; transition: 0.3s;}
+    .menu a:hover{color: var(--primary-light);}
+
+    /* Banners */
+    .banners{display:flex; flex-direction:column; gap:10px; padding:16px; max-width:1200px; margin:0 auto}
+    .banner{width:100%; height:auto; border-radius:10px; object-fit:cover; max-height:280px}
+
+    /* Área de Upload */
+    .upload{display:flex; gap:18px; align-items:flex-start; padding:30px 20px; flex-wrap:wrap; justify-content:center; max-width:1200px; margin:0 auto}
+    .grupo{display:flex; flex-direction:column; gap:8px; align-items:center}
+    .file-btn{padding:12px 20px; background:var(--bg2); color:var(--primary-dark); border:2px solid var(--primary-light); border-radius:12px; cursor:pointer; font-weight:600; transition: 0.3s;}
+    .file-btn:hover{background: var(--primary-light); color: #fff;}
+    
+    .btn-decorar-master {
+      background: linear-gradient(135deg, #4299e1, #1e70bf); color: #fff;
+      padding: 18px 50px; border: none; border-radius: 15px; cursor: pointer;
+      font-weight: 700; font-size: 20px; box-shadow: 0 10px 25px rgba(66, 153, 225, 0.4);
+      transition: all 0.3s ease; display: flex; align-items: center; gap: 10px;
+    }
+    .btn-decorar-master:hover { transform: translateY(-3px); }
+
+    /* Palco 3D */
+    .visual{padding:20px; max-width:1200px; margin:0 auto}
+    .stage{position:relative; width:100%; height:65vh; max-height:600px; border-radius:20px; border: 3px solid var(--primary-light); background:#fff; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.12);}
+    .env-bg{width:100%; height:100%; object-fit:cover;} 
+    .layer-container{position:absolute; inset:0; pointer-events:none;}
+    .dec-item{position:absolute; cursor: move; touch-action: none; pointer-events: auto; user-select: none;}
+    .dec-item.selected{border: 2px dashed var(--primary-light); box-shadow: 0 0 15px rgba(66,153,225,0.3);}
+
+    /* Lixeira */
+    .painel-lixeira {
+      background: #fff5f5; border: 2px dashed #feb2b2; border-radius: 15px;
+      padding: 20px; margin: 20px 0; display: flex; align-items: center; justify-content: center;
+      gap: 20px; cursor: pointer; transition: 0.3s;
+    }
+
+    /* Abas de Ajustes */
+    .tabs-menu { background: #fff; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; margin-top: 20px;}
+    .tabs-container { display: flex; background: #f1f5f9; overflow-x: auto;}
+    .tab-button { flex: 1; padding: 15px; border: none; font-weight: 600; cursor: pointer; color: var(--muted); white-space: nowrap;}
+    .tab-button.active { background: #fff; color: var(--primary-light); border-top: 4px solid var(--primary-light); }
+    .tab-content { display: none; padding: 25px; }
+    .tab-content.active { display: block; }
+
+    /* Biblioteca e Carrossel */
+    .secao{padding:16px; max-width:1200px; margin:0 auto}
+    .carousel-track { display: flex; gap: 15px; overflow-x: auto; padding: 15px; scrollbar-width: none; }
+    .item { flex: 0 0 130px; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); cursor: pointer; transition: 0.2s; background: #fff; }
+    .item img { width: 100%; height: 80px; object-fit: cover; display: block; }
+
+    /* Footer */
+    .rodape { background: linear-gradient(90deg, var(--footer-dark1), var(--footer-dark2)); color: #fff; text-align: center; padding: 40px 20px; margin-top: 50px; }
+
+    /* Modal Tour */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+    .modal-box { background: #fff; padding: 35px; border-radius: 25px; max-width: 450px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header class="topo">
+    <nav class="menu">
+        <a href="#banners">Início</a>
+        <a href="#upload">Upload</a>
+        <a href="#visual">Simulador 3D</a>
+        <a href="#biblioteca">Biblioteca</a>
+    </nav>
+</header>
+
+<main>
+    <section class="banners" id="banners">
+        <img class="banner" src="https://i.postimg.cc/zDc24Qqn/banner1.png">
+        <img class="banner" src="https://i.postimg.cc/L4bQGWmj/banner2.png">
+    </section>
+
+    <section class="upload" id="upload">
+        <div class="grupo">
+            <label class="file-btn" for="fileAmb">🏠 Escolher imagem de ambiente
+                <input accept="image/*" id="fileAmb" type="file" style="display:none" onchange="handleAmbiente(event)"/>
+            </label>
+        </div>
+        <div class="grupo">
+            <label class="file-btn" for="fileDec">🪑 Escolher imagens de decoração
+                <input accept="image/*" id="fileDec" multiple type="file" style="display:none" onchange="handleDecor(event)"/>
+            </label>
+        </div>
+        <div class="grupo">
+            <button class="btn-decorar-master" onclick="scrollToSimulador()">🌟 Começar a decorar</button>
+        </div>
+    </section>
+
+    <section class="visual" id="visual">
+        <div class="stage" id="stage">
+            <img id="envBg" class="env-bg" src="">
+            <div id="layerContainer" class="layer-container"></div>
+        </div>
+
+        <div class="painel-lixeira" onclick="removerSelecionado()">
+            <div style="font-size:40px">🗑️</div>
+            <div style="text-align:left">
+                <b style="color:#c53030">Clique na imagem e depois aqui para excluir</b>
+            </div>
+        </div>
+
+        <div class="tabs-menu">
+            <div class="tabs-container">
+                <button class="tab-button active" onclick="openTab(event, 'tabAjustes')">⚙️ Ajustes</button>
+                <button class="tab-button" onclick="openTab(event, 'tabTexto')">📝 Texto</button>
+            </div>
+            <div id="tabAjustes" class="tab-content active">
+                <label>Rotação 360°</label>
+                <input type="range" id="rotateCtrl" min="0" max="360" value="0" style="width:100%; margin-bottom:20px;" oninput="ajustarRotacao(this.value)">
+                <div style="display:flex; gap:10px">
+                    <button class="file-btn" style="flex:1" onclick="ajustarEscala(0.9)">Menor</button>
+                    <button class="file-btn" style="flex:1" onclick="ajustarEscala(1.1)">Maior</button>
+                </div>
+            </div>
+            <div id="tabTexto" class="tab-content">
+                <input type="text" id="inputTexto" placeholder="Escreva aqui..." style="width:100%; padding:15px; border-radius:10px; border:1px solid #ddd;">
+                <button class="btn-decorar-master" style="width:100%; font-size:16px; margin-top:15px;" onclick="adicionarTexto()">Inserir Texto</button>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:25px;">
+            <button class="btn-decorar-master" style="flex:1; background:var(--accent); font-size:16px;" onclick="baixarProjeto()">📥 Baixar Imagem</button>
+        </div>
+    </section>
+
+    <section class="secao" id="biblioteca">
+        <h2 style="font-family:'Playfair Display'">Sua Biblioteca</h2>
+        <div class="carousel-track" id="trackBiblioteca">
+            </div>
+    </section>
+</main>
+
+<footer class="rodape">
+    <p>Este trabalho é como gerar uma obra de arte! ❤️</p>
+    <p>© 2026 Rute Alves Oficial</p>
+</footer>
+
+<script>
+    // LISTA DOS SEUS LINKS (Exemplos de 211 links)
+    const LINKS = [
+        "https://i.postimg.cc/hvXnc7JL/1xg.jpg",
+        "https://i.postimg.cc/0jzvPJ6m/39140-c8ek6oipfd.png",
+        "https://i.postimg.cc/XJHWRgv3/590560797849264.jpg",
+        "https://i.postimg.cc/bJCP7RwB/800564197291108.jpg",
+        "https://i.postimg.cc/hjynk0Gf/976433699207551.jpg"
+        // ... adicione todos os outros aqui seguindo o mesmo padrão
+    ];
+
+    let selectedItem = null;
+
+    // Inicializar Biblioteca
+    const track = document.getElementById('trackBiblioteca');
+    LINKS.forEach(link => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<img src="${link}" onclick="adicionarAoPalco('${link}')">`;
+        track.appendChild(div);
+    });
+
+    // Lógica de Abas
+    function openTab(evt, name) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(name).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // Upload e Preview
+    function handleAmbiente(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => document.getElementById('envBg').src = event.target.result;
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function handleDecor(e) {
+        Array.from(e.target.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => adicionarAoPalco(event.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function scrollToSimulador() {
+        document.getElementById('visual').scrollIntoView({behavior: 'smooth'});
+    }
+
+    // Lógica do Simulador (Drag and Drop)
+    function adicionarAoPalco(src) {
+        const container = document.getElementById('layerContainer');
+        const item = document.createElement('div');
+        item.className = 'dec-item';
+        item.style.left = '50px';
+        item.style.top = '50px';
+        item.style.width = '150px';
+        
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.width = '100%';
+        
+        item.appendChild(img);
+        container.appendChild(item);
+
+        makeDraggable(item);
+        
+        item.onclick = (e) => {
+            e.stopPropagation();
+            selecionarItem(item);
+        };
+    }
+
+    function selecionarItem(item) {
+        if(selectedItem) selectedItem.classList.remove('selected');
+        selectedItem = item;
+        selectedItem.classList.add('selected');
+    }
+
+    function removerSelecionado() {
+        if(selectedItem) {
+            selectedItem.remove();
+            selectedItem = null;
+        }
+    }
+
+    function ajustarEscala(fator) {
+        if(selectedItem) {
+            const currentW = parseInt(selectedItem.style.width);
+            selectedItem.style.width = (currentW * fator) + 'px';
+        }
+    }
+
+    function ajustarRotacao(val) {
+        if(selectedItem) {
+            selectedItem.style.transform = `rotate(${val}deg)`;
+        }
+    }
+
+    function adicionarTexto() {
+        const txt = document.getElementById('inputTexto').value;
+        if(!txt) return;
+        const container = document.getElementById('layerContainer');
+        const item = document.createElement('div');
+        item.className = 'dec-item';
+        item.style.fontSize = '30px';
+        item.style.fontWeight = 'bold';
+        item.innerText = txt;
+        container.appendChild(item);
+        makeDraggable(item);
+        item.onclick = (e) => { e.stopPropagation(); selecionarItem(item); };
+    }
+
+    // Função de Arrastar (Mouse e Touch)
+    function makeDraggable(el) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        el.onmousedown = dragMouseDown;
+        el.ontouchstart = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            pos3 = e.clientX || e.touches[0].clientX;
+            pos4 = e.clientY || e.touches[0].clientY;
+            document.onmouseup = closeDragElement;
+            document.ontouchend = closeDragElement;
+            document.onmousemove = elementDrag;
+            document.ontouchmove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            let clientX = e.clientX || e.touches[0].clientX;
+            let clientY = e.clientY || e.touches[0].clientY;
+            pos1 = pos3 - clientX;
+            pos2 = pos4 - clientY;
+            pos3 = clientX;
+            pos4 = clientY;
+            el.style.top = (el.offsetTop - pos2) + "px";
+            el.style.left = (el.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.ontouchend = null;
+            document.ontouchmove = null;
+        }
+    }
+
+    function baixarProjeto() {
+        html2canvas(document.getElementById('stage')).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'minha-decoracao.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    }
+</script>
+</body>
+</html>
