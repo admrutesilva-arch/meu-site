@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Simulador de Decoração Profissional - Rute</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+    :root{
+      --primary-light:#4299e1; --primary-dark:#0c4a6e;
+      --bg1:#f8f9fb; --bg2:#ffffff; --text:#0b1220;
+      --accent:#10b981; --danger:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Poppins, sans-serif;margin:0;background:var(--bg1);color:var(--text);overflow-x:hidden;}
+
+    /* Modal */
+    #modal-welcome {
+        position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85);
+        z-index:9999; display:flex; align-items:center; justify-content:center;
+    }
+    .modal-box {
+        background:#fff; padding:30px; border-radius:20px; text-align:center; max-width:400px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Banners */
+    .banner-img{width:100%; display:block; height:auto; margin-bottom:5px;}
+    
+    /* Palco */
+    #stage {
+        position:relative; width:95%; height:550px; background:#fff; border:4px solid var(--primary-light); 
+        border-radius:15px; margin:20px auto; overflow:hidden; touch-action:none;
+    }
+    #main-bg{width:100%; height:100%; object-fit:cover; display:none;}
+    .dec-item{position:absolute; cursor:grab; user-select:none; z-index:10;}
+    .dec-item img { display:block; pointer-events:none; width:150px; }
+    .dec-item.selected { outline:2px dashed var(--primary-light); }
+
+    /* Controles e Carrosséis */
+    .controls-panel { max-width:1000px; margin:20px auto; background:#fff; border-radius:15px; padding:20px; }
+    .carousel-track { display:flex; gap:15px; padding:10px; overflow-x:auto; scrollbar-width:none; }
+    .item-img { flex:0 0 100px; height:100px; object-fit:contain; background:#f0f4f8; border-radius:10px; cursor:pointer; }
+    
+    .btn-action { padding:12px 20px; border-radius:10px; border:none; cursor:pointer; font-weight:bold; background:var(--primary-dark); color:white; }
+    .status-msg{font-weight:bold; text-align:center; height:24px; margin:10px;}
+    .text-blue{color:#3b82f6;}
+</style>
+</head>
+<body>
+
+<div id="modal-welcome">
+    <div class="modal-box">
+        <h2 style="font-family:'Playfair Display'">Bem-vinda(o)!</h2>
+        <p>Pronto(a) para criar o ambiente dos seus sonhos? Vamos começar!</p>
+        <button onclick="closeModal()" class="btn-action">Entrar no Simulador</button>
+    </div>
+</div>
+
+<div id="banner-container"></div>
+
+<section style="padding:20px; text-align:center;">
+    <div id="status-display" class="status-msg"></div>
+    <label class="btn-action">
+        🏠 Foto do Ambiente <input type="file" id="up-fundo" hidden onchange="processFile('bg')">
+    </label>
+</section>
+
+<div id="stage">
+    <img id="main-bg">
+    <div id="canvas-layers" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+</div>
+
+<div class="controls-panel">
+    <button onclick="updateItem('scale', 1.1)" class="btn-action" style="background:#eee; color:#333;">➕ Aumentar</button>
+    <button onclick="updateItem('scale', 0.9)" class="btn-action" style="background:#eee; color:#333;">➖ Diminuir</button>
+    <button onclick="deleteItem()" class="btn-action" style="background:#fee2e2; color:#b91c1c;">Excluir</button>
+</div>
+
+<div id="carrosseis-container"></div>
+
+<script>
+let selectedItem = null;
+
+const LINKS = {
+    banners: [
+        "https://i.postimg.cc/zDc24Qqn/banner1.png",
+        "https://i.postimg.cc/L4bQGWmj/banner2.png"
+    ],
+    biblioteca: [
+        "https://i.postimg.cc/hvXnc7JL/1xg.jpg", "https://i.postimg.cc/0jzvPJ6m/39140-c8ek6oipfd.png", "https://i.postimg.cc/XJHWRgv3/590560797849264.jpg", "https://i.postimg.cc/bJCP7RwB/800564197291108.jpg", "https://i.postimg.cc/hjynk0Gf/976433699207551.jpg", "https://i.postimg.cc/G27RWjpT/images-1.png", "https://i.postimg.cc/KvgbWBhh/images-2.png", "https://i.postimg.cc/dVPFc3JB/images-2025-09-03T205424-846.jpg", "https://i.postimg.cc/ydYBpGsM/images-2025-09-03T205433-322.jpg", "https://i.postimg.cc/g2VWzp0t/images-2025-09-03T205440-930.jpg", "https://i.postimg.cc/13GQmSzJ/images-2025-09-03T205445-897.jpg", "https://i.postimg.cc/mkP4BFck/images-2025-09-03T205507-586.jpg", "https://i.postimg.cc/rmnTB9pD/images-2025-09-03T205526-650.jpg", "https://i.postimg.cc/tJsbpV1B/images-2025-09-03T205552-828.jpg", "https://i.postimg.cc/J0SLn4Jc/images-2025-09-03T205613-225.jpg", "https://i.postimg.cc/qMCrFyVW/images-2025-09-03T205617-910.jpg", "https://i.postimg.cc/3xXT8hwS/images-2025-09-03T205636-146.jpg", "https://i.postimg.cc/Yqm7PYBt/images-2025-09-03T205649-389.jpg", "https://i.postimg.cc/Vkq8fwNq/images-2025-09-03T205655-865.jpg", "https://i.postimg.cc/x8B2CTHp/images-2025-09-03T205708-198.jpg", "https://i.postimg.cc/Vv286Lns/images-2025-09-03T205716-573.jpg", "https://i.postimg.cc/Bn93fbJ1/images-2025-09-03T205724-165.jpg", "https://i.postimg.cc/ryHcggbG/images-2025-09-03T205739-211.jpg", "https://i.postimg.cc/D0RTZys6/images-2025-09-03T205744-208.jpg", "https://i.postimg.cc/SQPqVV5B/images-2025-09-03T205748-599.jpg", "https://i.postimg.cc/G27RWjpb/images-2025-09-03T205753-560.jpg", "https://i.postimg.cc/Y2Pk88V8/images-2025-09-03T205757-969.jpg", "https://i.postimg.cc/zBtNskGQ/images-2025-09-03T205821-710.jpg", "https://i.postimg.cc/HxZmqtLp/images-2025-09-03T205827-601.jpg", "https://i.postimg.cc/hP7nYTRW/images-2025-09-03T205836-860.jpg", "https://i.postimg.cc/C1P034KL/images-2025-09-03T205851-770.jpg", "https://i.postimg.cc/SQPqVV5z/images-2025-09-03T205856-492.jpg", "https://i.postimg.cc/Kzqb65YS/images-2025-09-03T205902-780.jpg", "https://i.postimg.cc/mD2RpnBK/images-2025-09-03T205907-596.jpg", "https://i.postimg.cc/ydQKMT8r/images-2025-09-03T205913-362.jpg", "https://i.postimg.cc/d1HFb901/images-2025-09-03T205930-786.jpg", "https://i.postimg.cc/jq1Kvv9m/images-2025-09-03T205946-001.jpg", "https://i.postimg.cc/jq1Kvv9P/images-2025-09-03T210001-194.jpg", "https://i.postimg.cc/Z5tmznJ3/images-2025-09-03T210025-258.jpg", "https://i.postimg.cc/kG2CqtVK/images-2025-09-03T210035-035.jpg", "https://i.postimg.cc/MZLxtt47/images-2025-09-03T210039-303.jpg", "https://i.postimg.cc/GmwRntbJ/images-2025-09-03T210052-486.jpg", "https://i.postimg.cc/pLbvMrPh/images-2025-09-03T210058-818.jpg", "https://i.postimg.cc/5yDV0NvB/images-2025-09-03T210103-071.jpg", "https://i.postimg.cc/yx2HdY9r/images-2025-09-03T210107-780.jpg", "https://i.postimg.cc/2ygD68v2/images-2025-09-03T210143-235.jpg", "https://i.postimg.cc/4dLGD134/images-2025-09-03T210211-278.jpg", "https://i.postimg.cc/Bn93fbJK/images-2025-09-03T210215-704.jpg", "https://i.postimg.cc/fRnsQyMB/images-2025-09-03T210223-217.jpg", "https://i.postimg.cc/DybhNL3y/images-2025-09-03T210228-499.jpg", "https://i.postimg.cc/prmvRn9y/images-2025-09-03T210232-696.jpg", "https://i.postimg.cc/Tw7xzc3B/images-2025-09-03T210238-718.jpg", "https://i.postimg.cc/J0s8MByD/images-2025-09-03T210301-177.jpg", "https://i.postimg.cc/j2Bb5dPR/images-2025-09-03T210309-604.jpg", "https://i.postimg.cc/zBX52QqY/images-2025-09-03T210316-248.jpg", "https://i.postimg.cc/BbR06QD5/images-2025-09-03T210320-615.jpg", "https://i.postimg.cc/wj8zYM9N/images-2025-09-03T210324-706.jpg", "https://i.postimg.cc/qqNr4Ct2/images-2025-09-03T210336-142.jpg", "https://i.postimg.cc/vZrsYymn/images-2025-09-03T210357-520.jpg", "https://i.postimg.cc/v8KMXXj2/images-2025-09-03T210407-561.jpg", "https://i.postimg.cc/WpyjSSKZ/images-2025-09-03T210411-950.jpg", "https://i.postimg.cc/JzNLr8nL/images-2025-09-03T210427-511.jpg", "https://i.postimg.cc/RZ5mxhvN/images-2025-09-03T210437-099.jpg", "https://i.postimg.cc/T3V6dxwX/images-2025-09-03T210455-441.jpg", "https://i.postimg.cc/Kj1bxgKQ/images-2025-09-03T210502-666.jpg", "https://i.postimg.cc/NjqtvFQQ/images-2025-09-03T210507-353.jpg", "https://i.postimg.cc/hjynk0GB/images-2025-09-03T210520-049.jpg", "https://i.postimg.cc/HWNH33K6/images-2025-09-03T210526-509.jpg", "https://i.postimg.cc/65GKPnx3/images-2025-09-03T210537-198.jpg", "https://i.postimg.cc/j2DTtJWJ/images-2025-09-03T210542-763.jpg", "https://i.postimg.cc/dtTFfrPb/images-2025-09-03T210549-200.jpg", "https://i.postimg.cc/qMCrFyHv/images-2025-09-03T210557-278.jpg", "https://i.postimg.cc/5yXJbFHn/images-2025-09-03T210606-436.jpg", "https://i.postimg.cc/0jzvPJ6Q/images-2025-09-03T210612-035.jpg", "https://i.postimg.cc/V6GwxFN5/images-2025-09-03T210618-706.jpg", "https://i.postimg.cc/Kzqb658d/images-2025-09-03T210626-448.jpg", "https://i.postimg.cc/G3frzzNZ/images-2025-09-03T210631-775.jpg", "https://i.postimg.cc/85KG2bCg/images-2025-09-03T210638-201.jpg", "https://i.postimg.cc/Y2Pk88Vz/images-2025-09-03T210643-540.jpg", "https://i.postimg.cc/L8tp9Ssz/images-2025-09-03T210649-659.jpg", "https://i.postimg.cc/8PrGYMQ3/images-2025-09-03T210655-413.jpg", "https://i.postimg.cc/Rh2BFVKx/images-2025-09-03T210706-042.jpg", "https://i.postimg.cc/D0RTZysR/images-2025-09-03T210753-985.jpg", "https://i.postimg.cc/DfNF55Dj/images-2025-09-03T210815-938.jpg", "https://i.postimg.cc/x1DQV89g/images-2025-09-03T210825-228.jpg", "https://i.postimg.cc/Z5tmznJp/images-2025-09-03T210832-504.jpg", "https://i.postimg.cc/wxrHFFPr/images-2025-09-03T210858-668.jpg", "https://i.postimg.cc/ZYQZjjgX/images-2025-09-03T210912-293.jpg", "https://i.postimg.cc/ZKymQpz0/images-2025-09-03T210919-201.jpg", "https://i.postimg.cc/zGCrzNBm/images-2025-09-03T210934-502.jpg", "https://i.postimg.cc/ZKymQptw/images-2025-09-03T210941-030.jpg", "https://i.postimg.cc/g2FpbjGK/images-2025-09-03T211001-944.jpg", "https://i.postimg.cc/65GKPnxs/images-2025-09-03T211025-262.jpg", "https://i.postimg.cc/K8P2GbzS/images-2025-09-03T211030-613.jpg", "https://i.postimg.cc/MKjwLVJ6/images-2025-09-03T211046-605.jpg", "https://i.postimg.cc/sxbrXDSk/images-2025-09-03T211050-682.jpg", "https://i.postimg.cc/zv4rBXKr/images-2025-09-03T211059-542.jpg", "https://i.postimg.cc/Kzqb65Y8/images-2025-09-03T211106-142.jpg", "https://i.postimg.cc/zXRNQKYJ/images-2025-09-03T211127-399.jpg", "https://i.postimg.cc/jS0TY2Rs/images-2025-09-03T211134-316.jpg", "https://i.postimg.cc/NFZcMfmg/images-2025-09-03T211139-111.jpg", "https://i.postimg.cc/kG2CqtVF/images-2025-09-03T211206-030.jpg", "https://i.postimg.cc/Yqm7PYB7/images-2025-09-03T211209-906.jpg", "https://i.postimg.cc/rwXT2sqm/images-2025-09-03T211230-104.jpg", "https://i.postimg.cc/268m9tCp/images-2025-09-03T211252-942.jpg", "https://i.postimg.cc/gc7d445X/images-2025-09-03T211313-720.jpg", "https://i.postimg.cc/Gt4RdsBT/images-2025-09-03T211321-872.jpg", "https://i.postimg.cc/WzdVTJDp/images-2025-09-03T211329-336.jpg", "https://i.postimg.cc/DwrTvhzD/images-2025-09-03T211344-352.jpg", "https://i.postimg.cc/wM1zgstj/images-2025-09-03T211351-696.jpg", "https://i.postimg.cc/3x5hQN3g/images-2025-09-03T211357-674.jpg", "https://i.postimg.cc/XNP3xxhg/images-2025-09-03T211402-200.jpg", "https://i.postimg.cc/g2VWzp0T/images-2025-09-03T211406-516.jpg", "https://i.postimg.cc/90D2Cq4B/images-2025-09-03T211410-632.jpg", "https://i.postimg.cc/6prXWKQP/images-2025-09-03T211436-652.jpg", "https://i.postimg.cc/zXRNQKZ9/images-2025-09-03T211446-624.jpg", "https://i.postimg.cc/WpyjSSKd/images-2025-09-03T211506-802.jpg", "https://i.postimg.cc/4x6gfG3V/images-2025-09-03T211512-511.jpg", "https://i.postimg.cc/vZFywTGZ/images-2025-09-03T211518-116.jpg", "https://i.postimg.cc/5NFJrLW6/images-2025-09-03T211528-766.jpg", "https://i.postimg.cc/Dwkh307Q/images-2025-09-03T211532-920.jpg", "https://i.postimg.cc/KjC2zvLQ/images-2025-09-03T211539-367.jpg", "https://i.postimg.cc/TwYGNsT6/images-2025-09-03T211546-321.jpg", "https://i.postimg.cc/FzYvNJfV/images-2025-09-03T211609-257.jpg", "https://i.postimg.cc/L5JS2Zqk/images-2025-09-03T211622-462.jpg", "https://i.postimg.cc/pTXxcSPb/images-2025-09-03T211629-671.jpg", "https://i.postimg.cc/1RdPMMT6/images-2025-09-03T211702-049.jpg", "https://i.postimg.cc/7YT4R0rw/images-2025-09-03T211732-589.jpg", "https://i.postimg.cc/sxMzsZBc/images-2025-09-03T211743-064.jpg", "https://i.postimg.cc/j5gTphjw/images-2025-09-03T211756-317.jpg", "https://i.postimg.cc/k41C0y5q/images-2025-09-03T211832-778.jpg", "https://i.postimg.cc/qqWTRMnb/images-2025-09-03T211843-070.jpg", "https://i.postimg.cc/rFtTHx2k/images-2025-09-03T211848-802.jpg", "https://i.postimg.cc/VvJwmbS7/images-2025-09-03T211859-823.jpg", "https://i.postimg.cc/KvgbWBhy/images-3.png", "https://i.postimg.cc/FRWvMxKf/images-4.png", "https://i.postimg.cc/YC6Hr7SQ/images-5.png", "https://i.postimg.cc/gjxpm6ws/minimal-black-wall-clock-png.png", "https://i.postimg.cc/cLyWGCdB/modern-gray-refrigerator-illustration-vector-design-on-transparent-background-free-png.png", "https://i.postimg.cc/gJSpCK00/pngtree-an-ornate-luxurious-sofa-png-image-15430205.png", "https://i.postimg.cc/pLbvMrPd/pngtree-antique-charm-vintage-wooden-cupboard-rustic-elegance-classic-design-isolated-with-png-image.png", "https://i.postimg.cc/7Z84rhqJ/pngtree-golden-wooden-mirror-frame-png-image-12546713.png", "https://i.postimg.cc/3NzTRJmM/pngtree-silver-mini-fridge-illustration-png-image-6472828-1.png", "https://i.postimg.cc/P5WjXHqF/relogio-de-parede-30-x-30-cm-mar-2568br-1567141445-90ff-600x600.png", "https://i.postimg.cc/9Fq2kZ5n/stainless-steel-refrigerator-isolated-on-transparent-background-png.png"
+    ],
+    papel_de_parede: ["https://i.postimg.cc/CKYTQ2S4/4700-89464-std-024149.png", "https://i.postimg.cc/KYFSHWxw/adesivo-decorativo-lua-e-galhos-boho-chique-024142.png", "https://i.postimg.cc/JzjCK8V6/images-48-024152.jpg", "https://i.postimg.cc/5t1dRrbK/images-51-024149.jpg", "https://i.postimg.cc/bw1fLPcg/images-52-024148.jpg", "https://i.postimg.cc/y80CnK4b/images-53-024147.jpg", "https://i.postimg.cc/FH0XGv5q/images-54-024146.jpg", "https://i.postimg.cc/2SnNTYRM/images-55-024145.jpg", "https://i.postimg.cc/ZqZtMQ4H/images-56-024144.jpg", "https://i.postimg.cc/nLZbPWpw/images-57-024144.jpg", "https://i.postimg.cc/pdxb6SR7/images-58-024142.jpg", "https://i.postimg.cc/5t1dRrbh/images-59-024141.jpg", "https://i.postimg.cc/d0vPxfJM/images-60-024140.jpg", "https://i.postimg.cc/tgyQMc9G/images-61-024139.jpg", "https://i.postimg.cc/zf5ZcQq1/images-62-024138.jpg", "https://i.postimg.cc/1zPhjdyP/images-63-024137.jpg", "https://i.postimg.cc/KYFSHWmx/images-64-024136.jpg", "https://i.postimg.cc/VN1QVhzY/images-65-024135.jpg", "https://i.postimg.cc/VkXP4wQD/pngtree-red-brick-pattern-illustration-png-image-6480131-024153.png", "https://i.postimg.cc/zGTYpNZ2/pngtree-transparent-background-texture-seamless-brick-wall-pattern-overlay-png-image-11991950-024202.png"],
+    portas_e_janelas: ["https://i.postimg.cc/XqsgcpxT/ai-generated-door-interior-isolated-on-transparent-background-free-png.png", "https://i.postimg.cc/Y0r3W1Nf/images-2025-09-03T213517-446.jpg", "https://i.postimg.cc/Y0r3W1NN/images-2025-09-03T213526-229.jpg", "https://i.postimg.cc/HnY2yQ0z/images-2025-09-03T213532-986.jpg", "https://i.postimg.cc/mkLwHQ3Y/images-2025-09-03T213539-087.jpg", "https://i.postimg.cc/QC8bTpgp/images-2025-09-03T213545-473.jpg", "https://i.postimg.cc/BbSgKx51/images-2025-09-03T213605-572.jpg", "https://i.postimg.cc/x8fRzKGk/images-2025-09-03T213611-499.jpg", "https://i.postimg.cc/nrFkDvKL/images-2025-09-03T213618-188.jpg", "https://i.postimg.cc/NFs4H18F/images-2025-09-03T213626-035.jpg", "https://i.postimg.cc/6qW0vdV4/images-2025-09-03T213630-937.jpg", "https://i.postimg.cc/8cpH6hd6/images-2025-09-03T213635-570.jpg", "https://i.postimg.cc/zvzjgnwX/images-2025-09-03T213640-750.jpg", "https://i.postimg.cc/rsVJrSGy/images-2025-09-03T213647-996.jpg", "https://i.postimg.cc/mkLwHQ3T/images-2025-09-03T213705-778.jpg", "https://i.postimg.cc/LXBD5yPJ/images-2025-09-03T213716-482.jpg", "https://i.postimg.cc/4yf59zvZ/images-2025-09-03T213723-692.jpg", "https://i.postimg.cc/DZd60CG8/images-2025-09-03T213858-429.jpg", "https://i.postimg.cc/j5Qc28f5/images-2025-09-03T213902-963.jpg", "https://i.postimg.cc/mDNjkd9r/images-2025-09-03T213911-606.jpg", "https://i.postimg.cc/D0vgXqQ5/images-2025-09-03T224944-810.jpg", "https://i.postimg.cc/D0xcd85G/images-2025-09-03T224951-077.jpg", "https://i.postimg.cc/8cpH6hdt/images-2025-09-03T224957-891.jpg", "https://i.postimg.cc/PJSMzPK1/images-2025-09-03T225009-525.jpg", "https://i.postimg.cc/d359mLnR/images-2025-09-03T225024-653.jpg", "https://i.postimg.cc/SRgG7JVG/images-2025-09-03T225033-324.jpg", "https://i.postimg.cc/wMwkc7Ff/images-2025-09-03T225041-053.jpg", "https://i.postimg.cc/NFdx75bd/images-2025-09-03T225045-765.jpg", "https://i.postimg.cc/fy8vjJ5H/images-2025-09-03T225056-406.jpg", "https://i.postimg.cc/zvxkSVp2/images-2025-09-03T225105-203.jpg", "https://i.postimg.cc/x86PycgB/images-2025-09-03T225111-604.jpg", "https://i.postimg.cc/D0xcd859/images-2025-09-03T225125-879.jpg", "https://i.postimg.cc/mkmSNt8x/images-2025-09-03T225140-100.jpg", "https://i.postimg.cc/QCfqkH0Z/images-2025-09-03T225149-927.jpg", "https://i.postimg.cc/mkmSNt8G/images-2025-09-03T225157-491.jpg", "https://i.postimg.cc/rsf9CKQT/images-2025-09-03T225215-361.jpg", "https://i.postimg.cc/rsf9CKQc/images-2025-09-03T225222-731.jpg", "https://i.postimg.cc/dQ6nKxvL/images-2025-09-03T225251-658.jpg", "https://i.postimg.cc/8k4wV0DF/images-2025-09-03T225309-479.jpg", "https://i.postimg.cc/MZ5t8FxM/images-2025-09-03T225315-272.jpg", "https://i.postimg.cc/MH9Ybvt7/pngtree-wooden-door-png-image-6093732-1.png"],
+    pisos: ["https://i.postimg.cc/CLDGxrpW/decoracao-024112.jpg", "https://i.postimg.cc/sfMPtD6d/images-67-024133.jpg", "https://i.postimg.cc/VsJ93LG8/images-68-024132.jpg", "https://i.postimg.cc/Y2vNJqnw/images-69-024131.jpg", "https://i.postimg.cc/7P51pYsr/images-70-024130.jpg", "https://i.postimg.cc/NGK8WfJB/images-71-024129.jpg", "https://i.postimg.cc/BZj5dQYQ/images-72-024128.jpg", "https://i.postimg.cc/NGK8WfJL/images-73-024127.jpg", "https://i.postimg.cc/L4GkRKwj/images-74-024126.jpg", "https://i.postimg.cc/y62hB4tx/images-75-024125.jpg", "https://i.postimg.cc/L4GkRKw6/images-76-024125.jpg", "https://i.postimg.cc/sfMPtD6M/images-77-024123.jpg", "https://i.postimg.cc/kMLN93zx/images-79-024123.jpg", "https://i.postimg.cc/CM9CYTXC/images-80-024122.jpg", "https://i.postimg.cc/y62hB4tm/images-81-024121.jpg", "https://i.postimg.cc/T2BjGMFC/images-82-024120.jpg", "https://i.postimg.cc/PrZW5VnQ/images-84-024119.jpg", "https://i.postimg.cc/SN86x1b7/images-85-024118.jpg", "https://i.postimg.cc/wTJXj4Yh/images-86-024117.jpg", "https://i.postimg.cc/Qx5QdYZ1/images-87-024116.jpg", "https://i.postimg.cc/3JpXxfQ9/images-89-024115.jpg", "https://i.postimg.cc/9FTdQgHn/images-90-024114.jpg", "https://i.postimg.cc/CLDGxrp3/images-91-024113.jpg"],
+    temas_festas: ["https://i.postimg.cc/RV8DjDLz/images-10.jpg", "https://i.postimg.cc/bNMBKB9X/images-11.jpg", "https://i.postimg.cc/xT74W4yW/images-12.jpg", "https://i.postimg.cc/pX76g6Y7/images-13.jpg", "https://i.postimg.cc/28JKPKF2/images-14.jpg", "https://i.postimg.cc/m2q505Np/images-15.jpg", "https://i.postimg.cc/GhN5Z5JP/images-16.jpg", "https://i.postimg.cc/TYS4Z4q0/images-17.jpg", "https://i.postimg.cc/c4jbVbMm/images-18.jpg", "https://i.postimg.cc/MK4FhFbt/images-19.jpg", "https://i.postimg.cc/d0cS0Zft/images-20.jpg", "https://i.postimg.cc/vmwSmxKc/images-21.jpg", "https://i.postimg.cc/FKXnKk61/images-22.jpg", "https://i.postimg.cc/3xvc7FtD/images-23.jpg", "https://i.postimg.cc/qv350x1N/images-24.jpg", "https://i.postimg.cc/dVyxvj4p/images-25.jpg", "https://i.postimg.cc/kgbp9vTr/images-27.jpg", "https://i.postimg.cc/sghNy4Tv/images-28.jpg", "https://i.postimg.cc/wjmGHQw9/images-29.jpg", "https://i.postimg.cc/3J6cPcFT/images-30.jpg", "https://i.postimg.cc/QMZnMKzS/images-31.jpg", "https://i.postimg.cc/6Qx1Q4Pj/images-32.jpg", "https://i.postimg.cc/5tWktQrm/images-33.jpg"],
+    decoracao_festas: ["https://i.postimg.cc/FKfcwTp2/birthday-party-single-decoratibe-hat-11502410-png-w700wp.webp", "https://i.postimg.cc/PqBZH1VS/black-gold-helium-balloons-elegant-stylish-party-decoration-11603617-png-w700wp.webp", "https://i.postimg.cc/5tHvDsgq/images-34.jpg", "https://i.postimg.cc/5tHvDsgB/images-35.jpg", "https://i.postimg.cc/GpBY6XKG/images-36.jpg", "https://i.postimg.cc/CKZD9c7B/images-37.jpg", "https://i.postimg.cc/g0wR1gsx/images-38.jpg", "https://i.postimg.cc/kgYKj0Qx/images-39.jpg", "https://i.postimg.cc/cJKYPFhr/images-40.jpg", "https://i.postimg.cc/LsqfGxDy/images-41.jpg", "https://i.postimg.cc/QMB5vfmm/images-42.jpg", "https://i.postimg.cc/yNJ92LjT/images-43.jpg", "https://i.postimg.cc/DzWsRx6P/images-44.jpg", "https://i.postimg.cc/k5V8LTsW/images-45.jpg", "https://i.postimg.cc/bvGb4mgQ/images-46.jpg", "https://i.postimg.cc/XvZFtsL1/images-47.jpg", "https://i.postimg.cc/sgH7nkYQ/images-51.jpg", "https://i.postimg.cc/K8pB96Pj/images-52.jpg", "https://i.postimg.cc/8zXMy2R7/images-53.jpg", "https://i.postimg.cc/jS3P8pHW/images-54.jpg", "https://i.postimg.cc/GmgGMWFG/images-55.jpg", "https://i.postimg.cc/8CFWxZ43/images-56.jpg", "https://i.postimg.cc/GpBY6XKV/images-57.jpg", "https://i.postimg.cc/8CFWxZ4K/images-58.jpg", "https://i.postimg.cc/W4Drx58y/images-59.jpg", "https://i.postimg.cc/6pbnHkrC/pngtree-a-flower-arch-with-pink-and-purple-flowers-on-it-png-image-13182110.png"]
+};
+
+// Carregar Banners
+const bCont = document.getElementById('banner-container');
+LINKS.banners.forEach(url => bCont.innerHTML += `<img src="${url}" class="banner-img">`);
+
+// Carregar Carrosséis com títulos
+const labels = {
+    biblioteca: "🪑 Biblioteca de Móveis",
+    papel_de_parede: "🎨 Papel de Parede",
+    portas_e_janelas: "🚪 Portas e Janelas",
+    pisos: "🪵 Pisos",
+    temas_festas: "🎂 Temas de Festas",
+    decoracao_festas: "🎈 Decoração de Festas"
+};
+
+const carCont = document.getElementById('carrosseis-container');
+for(let k in labels){
+    let html = `<h3 style="margin:20px 10px 5px; font-family:'Playfair Display'">${labels[k]}</h3>`;
+    html += `<div class="carousel-track">`;
+    LINKS[k].forEach(img => html += `<img src="${img}" class="item-img" onclick="addToStage('${img}')">`);
+    html += `</div>`;
+    carCont.innerHTML += html;
+}
+
+// Funções do Simulador
+function closeModal() { document.getElementById('modal-welcome').style.display='none'; }
+
+function processFile(type) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        if(type === 'bg') {
+            const img = document.getElementById('main-bg');
+            img.src = e.target.result; img.style.display = 'block';
+        }
+    }
+    reader.readAsDataURL(document.getElementById('up-fundo').files[0]);
+}
+
+function addToStage(url) {
+    const div = document.createElement('div');
+    div.className = 'dec-item';
+    div.innerHTML = `<img src="${url}">`;
+    document.getElementById('canvas-layers').appendChild(div);
+    makeDraggable(div);
+    selectItem(div);
+}
+
+function makeDraggable(el) {
+    let p1=0, p2=0, p3=0, p4=0;
+    el.onmousedown = (e) => {
+        selectItem(el);
+        p3 = e.clientX; p4 = e.clientY;
+        document.onmousemove = (ev) => {
+            p1 = p3 - ev.clientX; p2 = p4 - ev.clientY;
+            p3 = ev.clientX; p4 = ev.clientY;
+            el.style.top = (el.offsetTop - p2) + "px";
+            el.style.left = (el.offsetLeft - p1) + "px";
+        };
+        document.onmouseup = () => { document.onmousemove = null; };
+    };
+}
+
+function selectItem(el) {
+    if(selectedItem) selectedItem.classList.remove('selected');
+    selectedItem = el;
+    selectedItem.classList.add('selected');
+}
+
+function updateItem(type, val) {
+    if(!selectedItem) return;
+    if(type === 'scale') selectedItem.style.width = (selectedItem.offsetWidth * val) + "px";
+}
+
+function deleteItem() { if(selectedItem) selectedItem.remove(); }
+</script>
+</body>
+</html>
