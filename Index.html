@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width,initial-scale=1" name="viewport"/>
+    <title>Visualizador de Decoração Profissional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-light: #4299e1; --primary-dark: #0c4a6e;
+            --bg1: #f8f9fb; --text: #0b1220;
+            --gradient-premium: linear-gradient(90deg, #0d416b, #0b1220);
+            --accent: #10b981;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg1); color: var(--text); overflow-x: hidden; }
+
+        .topo { position: sticky; top: 0; z-index: 999; background: var(--gradient-premium); padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .topo a { color: #fff; text-decoration: none; font-weight: 600; margin: 0 10px; font-size: 13px; text-transform: uppercase; }
+        
+        .banners { padding: 20px; text-align: center; }
+        .banner-img { width: 100%; max-width: 1100px; border-radius: 15px; }
+
+        /* Upload Section */
+        .upload-area { max-width: 600px; margin: 20px auto; display: flex; flex-direction: column; gap: 15px; padding: 0 20px; align-items: center; }
+        .file-label { width: 100%; padding: 16px; border: 2px solid var(--primary-light); border-radius: 12px; background: #fff; color: var(--primary-dark); font-weight: 700; text-align: center; cursor: pointer; }
+        .btn-start { width: 100%; padding: 18px; background: var(--gradient-premium); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        
+        /* Status & Loading */
+        .status-msg { display: none; text-align: center; font-weight: 600; color: var(--accent); margin-top: 10px; padding: 10px; border-radius: 8px; }
+        .loading-bar-wrap { display: none; width: 100%; background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+        .bar-fill { width: 0%; height: 100%; background: var(--primary-light); transition: width 3s linear; }
+
+        /* Stage */
+        .simulador { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .stage { position: relative; width: 100%; height: 500px; background: #ddd; border-radius: 20px; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .bg-img { position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        .paint-layer { position: absolute; inset: 0; z-index: 2; mix-blend-mode: multiply; pointer-events: none; opacity: 0; }
+        .object-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+        
+        .dec-item { position: absolute; cursor: move; pointer-events: auto; z-index: 4; transform-origin: center; }
+        .dec-item.selected { outline: 2px dashed var(--primary-light); background: rgba(66,153,225,0.1); }
+        .dec-item img { width: 100%; display: block; pointer-events: none; }
+
+        .trash-panel { width: 100%; background: #fff; border: 2px solid #fee2e2; padding: 12px; border-radius: 15px; color: #ef4444; font-weight: 700; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* Panels */
+        .panel { background: #fff; border-radius: 20px; margin-top: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .tabs { display: flex; background: #f1f5f9; }
+        .tab-btn { flex: 1; padding: 15px; border: none; font-weight: 700; cursor: pointer; color: #64748b; }
+        .tab-btn.active { background: #fff; color: var(--primary-light); border-bottom: 3px solid var(--primary-light); }
+        .content { display: none; padding: 25px; }
+        .content.active { display: block; }
+
+        .size-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-size { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: 700; cursor: pointer; background: #f8fafc; }
+        .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px; }
+        .swatch { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* Chat */
+        .chat-area { max-width: 800px; margin: 30px auto; background: #fff; border-radius: 15px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .chat-messages { height: 150px; overflow-y: auto; padding: 15px; background: #f8fafc; font-size: 14px; }
+        .chat-input { display: flex; border-top: 1px solid #eee; }
+        .chat-input input { flex: 1; padding: 15px; border: none; outline: none; }
+        .chat-input button { padding: 0 25px; background: var(--primary-light); color: #fff; border: none; font-weight: 700; cursor: pointer; }
+
+        /* Footer */
+        .footer { background: var(--gradient-premium); color: #fff; text-align: center; padding: 40px 20px; margin-top: 50px; font-size: 14px; line-height: 1.6; }
+
+        .btn-zap { background: #25d366; color: #fff; padding: 18px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; font-weight: 700; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<header class="topo">
+    <a href="#">Início</a> <a href="#simulador">Simulador</a> <a href="#ajuda">Ajuda</a>
+</header>
+
+<main>
+    <section class="banners">
+        <img src="https://i.postimg.cc/zDc24Qqn/banner1.png" class="banner-img">
+    </section>
+
+    <section class="upload-area">
+        <label class="file-label">🏠 Enviar Ambiente <input type="file" hidden onchange="handleFile(this, 'bg')"></label>
+        <label class="file-label">🪑 Adicionar Decoração <input type="file" hidden multiple onchange="handleFile(this, 'item')"></label>
+        
+        <button class="btn-start" onclick="animarProcesso()">🌟 Começar a Decorar</button>
+
+        <div id="statusBox" class="status-msg"></div>
+        <div id="loadingBox" class="loading-bar-wrap"><div id="barFill" class="bar-fill"></div></div>
+    </section>
+
+    <section class="simulador" id="simulador">
+        <div class="trash-panel" onclick="removerItem()">
+            <span>🗑️</span> Clique aqui para apagar o item selecionado
+        </div>
+
+        <div class="stage" id="mainStage">
+            <img id="viewBg" class="bg-img" src="https://i.postimg.cc/zDc24Qqn/banner1.png" onclick="deselect()">
+            <div id="overlayPaint" class="paint-layer"></div>
+            <div id="overlayItems" class="object-layer"></div>
+        </div>
+
+        <div class="panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="tab(event, 'abaAjustes')">⚙️ Ajustes</button>
+                <button class="tab-btn" onclick="tab(event, 'abaPintura')">🎨 Pintura 3D</button>
+                <button class="tab-btn" onclick="tab(event, 'abaTexto')">📝 Texto</button>
+            </div>
+
+            <div id="abaAjustes" class="content active">
+                <label>Rotação</label>
+                <input type="range" min="0" max="360" value="0" oninput="ajustar('rotate', this.value)" style="width:100%">
+                <label style="display:block; margin-top:15px;">Opacidade</label>
+                <input type="range" min="0" max="100" value="100" oninput="ajustar('opacity', this.value)" style="width:100%">
+                <div class="size-btns">
+                    <button class="btn-size" onclick="ajustar('scale', 1.1)">Aumentar (+)</button>
+                    <button class="btn-size" onclick="ajustar('scale', 0.9)">Diminuir (-)</button>
+                </div>
+            </div>
+
+            <div id="abaPintura" class="content">
+                <div class="color-grid" id="paletteGrid"></div>
+                <div style="margin-top:20px;">
+                    <label>Personalizado (Cor e Saturação):</label>
+                    <input type="color" oninput="colorir(this.value)" style="width:100%; height:45px; margin-top:5px; border-radius:8px; border:none;">
+                </div>
+            </div>
+
+            <div id="abaTexto" class="content">
+                <input type="text" id="txtInput" placeholder="Sua frase aqui..." style="width:100%; padding:15px; border-radius:10px; border:1px solid #ddd;">
+                <input type="color" id="txtColor" value="#000000" style="width:100%; height:40px; margin-top:10px; border:none; border-radius:8px;">
+                <button class="btn-start" style="margin-top:15px;" onclick="addTexto()">Inserir Texto</button>
+            </div>
+        </div>
+
+        <button class="btn-start" style="margin-top: 25px;" onclick="download()">📥 Baixar Meu Projeto</button>
+        <a href="https://wa.me/?text=Confira meu projeto de decoração!" class="btn-zap">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22"> Compartilhar no WhatsApp
+        </a>
+    </section>
+
+    <section class="chat-area" id="ajuda">
+        <div style="padding:15px; font-weight:700; border-bottom:1px solid #eee; display:flex; align-items:center; gap:10px;">🤖 Assistente de Decoração</div>
+        <div class="chat-messages" id="chatDisplay">
+            <p><b>Robô:</b> Olá! Escolha uma decoração para começar a transformar seu espaço. ✨</p>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatMsg" placeholder="Diga 'Oi' ou tire sua dúvida...">
+            <button onclick="falarIA()">Enviar</button>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    Desenvolvido para mentes criativas<br>
+    Contato: Adm.rute.silva@gmail.com<br>
+    ©️ 2026 Visualisador de decoração | todos os direitos reservados
+</footer>
+
+<script>
+    let sel = null;
+    const CORES = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ffa500', '#ffffff', '#000000', '#8b4513', '#d2b48c', '#808080'];
+
+    // Iniciar Paleta
+    const grid = document.getElementById('paletteGrid');
+    CORES.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'swatch'; d.style.background = c;
+        d.onclick = () => colorir(c);
+        grid.appendChild(d);
+    });
+
+    function msg(t) {
+        const box = document.getElementById('statusBox');
+        box.innerText = t; box.style.display = 'block';
+        setTimeout(() => box.style.display = 'none', 4000);
+    }
+
+    function handleFile(input, type) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if(type === 'bg') {
+                document.getElementById('viewBg').src = e.target.result;
+                msg("Imagem de ambiente carregada! ✅");
+            } else {
+                Array.from(input.files).forEach(f => {
+                    const r = new FileReader();
+                    r.onload = (ev) => addItem(ev.target.result);
+                    r.readAsDataURL(f);
+                });
+                msg("Imagem inserida com sucesso! Clique em começar a decorar.");
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function animarProcesso() {
+        const bar = document.getElementById('loadingBox');
+        const fill = document.getElementById('barFill');
+        bar.style.display = 'block'; fill.style.width = '100%';
+        msg("Suas imagens estão sendo inseridas...");
+        setTimeout(() => {
+            document.getElementById('simulador').scrollIntoView({behavior: 'smooth'});
+            bar.style.display = 'none'; fill.style.width = '0%';
+        }, 3000);
+    }
+
+    function addItem(src) {
+        const div = document.createElement('div');
+        div.className = 'dec-item';
+        div.style.width = '180px'; div.style.top = '100px'; div.style.left = '100px';
+        div.innerHTML = `<img src="${src}">`;
+        div.onmousedown = (e) => { e.stopPropagation(); select(div); };
+        div.ontouchstart = (e) => { e.stopPropagation(); select(div); };
+        document.getElementById('overlayItems').appendChild(div);
+        drag(div);
+        select(div);
+    }
+
+    function select(el) {
+        if(sel) sel.classList.remove('selected');
+        sel = el; if(sel) sel.classList.add('selected');
+    }
+    function deselect() { if(sel) sel.classList.remove('selected'); sel = null; }
+
+    function ajustar(t, v) {
+        if(!sel) return;
+        if(t === 'rotate') sel.style.transform = `rotate(${v}deg)`;
+        if(t === 'opacity') sel.style.opacity = v / 100;
+        if(t === 'scale') {
+            let w = sel.offsetWidth;
+            sel.style.width = (w * v) + "px";
+        }
+    }
+
+    function colorir(c) {
+        if(sel && !sel.innerText) {
+            sel.style.filter = `drop-shadow(0 0 0 ${c}) brightness(1.2)`;
+        } else {
+            const p = document.getElementById('overlayPaint');
+            p.style.background = c; p.style.opacity = '0.4';
+        }
+    }
+
+    function addTexto() {
+        const t = document.getElementById('txtInput').value;
+        const c = document.getElementById('txtColor').value;
+        if(!t) return;
+        const d = document.createElement('div');
+        d.className = 'dec-item'; d.innerText = t;
+        d.style.color = c; d.style.fontSize = '35px'; d.style.fontWeight = '700';
+        d.onmousedown = (e) => { e.stopPropagation(); select(d); };
+        document.getElementById('overlayItems').appendChild(d);
+        drag(d); select(d);
+    }
+
+    function removerItem() { if(sel) { sel.remove(); sel = null; } }
+
+    function tab(e, id) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.currentTarget.classList.add('active');
+    }
+
+    function drag(el) {
+        let p1=0, p2=0, p3=0, p4=0;
+        const s = document.getElementById('mainStage');
+        el.onmousedown = start; el.ontouchstart = start;
+        function start(e) {
+            p3 = e.clientX || e.touches[0].clientX;
+            p4 = e.clientY || e.touches[0].clientY;
+            document.onmouseup = stop; document.ontouchend = stop;
+            document.onmousemove = move; document.ontouchmove = move;
+        }
+        function move(e) {
+            let cx = e.clientX || e.touches[0].clientX;
+            let cy = e.clientY || e.touches[0].clientY;
+            p1 = p3 - cx; p2 = p4 - cy; p3 = cx; p4 = cy;
+            let nT = el.offsetTop - p2; let nL = el.offsetLeft - p1;
+            if(nT >= 0 && nT + el.offsetHeight <= s.offsetHeight) el.style.top = nT + "px";
+            if(nL >= 0 && nL + el.offsetWidth <= s.offsetWidth) el.style.left = nL + "px";
+        }
+        function stop() { document.onmouseup = null; document.onmousemove = null; }
+    }
+
+    function falarIA() {
+        const inp = document.getElementById('chatMsg');
+        const disp = document.getElementById('chatDisplay');
+        if(!inp.value) return;
+        disp.innerHTML += `<p><b>Você:</b> ${inp.value}</p>`;
+        let r = "Desculpe, não entendi.";
+        let v = inp.value.toLowerCase();
+        if(v.includes("oi") || v.includes("olá")) r = "Olá! Como posso ajudar você a decorar hoje?";
+        else if(v.includes("como")) r = "Suba fotos de ambiente e decoração, use as abas para ajustar e pinte em 3D!";
+        setTimeout(() => { disp.innerHTML += `<p><b>Robô:</b> ${r}</p>`; disp.scrollTop = disp.scrollHeight; }, 600);
+        inp.value = "";
+    }
+
+    function download() {
+        if(sel) sel.classList.remove('selected');
+        html2canvas(document.getElementById('mainStage')).then(c => {
+            const a = document.createElement('a'); a.download = 'projeto.png'; a.href = c.toDataURL(); a.click();
+        });
+    }
+</script>
+</body>
+</html>
