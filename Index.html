@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport"/>
+    <title>Visualizador de Decoração Profissional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-light: #4299e1; --primary-dark: #0c4a6e;
+            --bg1: #f8f9fb; --text: #0b1220;
+            --gradient-premium: linear-gradient(90deg, #0d416b, #0b1220);
+            --accent: #10b981;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { overflow-x: hidden; width: 100%; position: relative; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg1); color: var(--text); }
+
+        /* Header Responsivo */
+        .topo { position: sticky; top: 0; z-index: 999; background: var(--gradient-premium); padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .menu-lista { display: flex; justify-content: center; gap: 15px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+        .menu-lista li a { color: #fff; text-decoration: none; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; }
+        
+        .banners { padding: 10px; text-align: center; }
+        .banner-img { width: 100%; max-width: 1100px; border-radius: 12px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+
+        /* Upload Area */
+        .upload-area { max-width: 600px; margin: 10px auto; padding: 0 15px; display: flex; flex-direction: column; align-items: center; }
+        .status-msg { display: none; width: 100%; text-align: center; font-weight: 600; color: var(--accent); background: #e6fffa; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--accent); }
+        
+        .file-label { width: 100%; padding: 14px; border: 2px solid var(--primary-light); border-radius: 12px; background: #fff; color: var(--primary-dark); font-weight: 700; text-align: center; cursor: pointer; margin-bottom: 10px; font-size: 14px; }
+        .btn-start { width: 100%; padding: 16px; background: var(--gradient-premium); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 15px; transition: 0.3s; }
+
+        /* Stage de Visualização */
+        .simulador { max-width: 1000px; margin: 0 auto; padding: 10px; }
+        .stage { position: relative; width: 100%; height: 400px; background: #ddd; border-radius: 15px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); touch-action: none; }
+        @media (min-width: 768px) { .stage { height: 550px; } }
+        
+        .bg-img { position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; }
+        .object-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+        
+        .dec-item { position: absolute; cursor: move; pointer-events: auto; z-index: 4; transform-origin: center center; touch-action: none; display: flex; align-items: center; justify-content: center; }
+        .dec-item img { width: 100%; height: auto; display: block; pointer-events: none; user-select: none; }
+        .dec-item.selected { outline: 2px dashed var(--primary-light); background: rgba(66,153,225,0.1); }
+
+        .trash-btn-mini { position: absolute; top: 10px; right: 10px; z-index: 10; background: #fff; color: #ef4444; border: 1px solid #fee2e2; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+
+        /* Painel de Edição */
+        .panel { background: #fff; border-radius: 15px; margin-top: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .tabs { display: flex; background: #f1f5f9; border-radius: 15px 15px 0 0; }
+        .tab-btn { flex: 1; padding: 12px 2px; border: none; font-weight: 700; cursor: pointer; color: #64748b; font-size: 11px; text-transform: uppercase; }
+        .tab-btn.active { background: #fff; color: var(--primary-light); border-bottom: 3px solid var(--primary-light); }
+        
+        .content { display: none; padding: 15px; }
+        .content.active { display: block; }
+
+        .carousel-track { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .img-thumb { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; flex-shrink: 0; border: 2px solid #eee; }
+
+        /* Botão WhatsApp */
+        .btn-zap { background: #25d366; color: #fff; padding: 18px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; font-weight: 700; margin-top: 15px; font-size: 15px; }
+
+        /* Modal Aviso */
+        #modalAviso { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #fff; padding: 25px; border-radius: 20px; text-align: center; max-width: 350px; border: 3px solid var(--primary-light); }
+
+        /* Footer */
+        .footer { background: var(--gradient-premium); color: #fff; text-align: center; padding: 40px 20px; font-size: 15px; border-top: 4px solid var(--primary-light); }
+    </style>
+</head>
+<body>
+
+<header class="topo">
+    <ul class="menu-lista">
+        <li><a href="#">🏠 Início</a></li>
+        <li><a href="#simulador">✨ Simulador</a></li>
+        <li><a href="#ajuda">🤖 Assistente</a></li>
+        <li><a href="#">💎 Premium</a></li>
+    </ul>
+</header>
+
+<div id="modalAviso" onclick="this.style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span style="font-size:40px">⬆️</span>
+        <h3>Atenção!</h3>
+        <p>Por favor, envie a imagem do seu ambiente primeiro!</p>
+        <button class="btn-start" onclick="document.getElementById('modalAviso').style.display='none'">Ok, entendi</button>
+    </div>
+</div>
+
+<main>
+    <section class="banners">
+        <img src="https://i.postimg.cc/zDc24Qqn/banner1.png" class="banner-img">
+    </section>
+
+    <section class="upload-area">
+        <div id="statusBox" class="status-msg"></div>
+        <label class="file-label">📸 Enviar Ambiente <input type="file" id="inputBg" hidden onchange="handleFile(this, 'bg')"></label>
+        <label class="file-label">🛋️ Adicionar Decoração <input type="file" hidden multiple onchange="handleFile(this, 'item')"></label>
+        <button class="btn-start" onclick="verificarAntesDeIniciar()">🚀 Começar a Decorar</button>
+    </section>
+
+    <section class="simulador" id="simulador">
+        <div class="stage" id="mainStage">
+            <button class="trash-btn-mini" onclick="removerItem()">🗑️ Apagar</button>
+            <img id="viewBg" class="bg-img" src="">
+            <div id="overlayPaint" style="position:absolute; inset:0; z-index:2; pointer-events:none; mix-blend-mode:multiply;"></div>
+            <div id="overlayItems" class="object-layer"></div>
+        </div>
+
+        <div class="panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="tab(event, 'abaAjustes')">Ajustes</button>
+                <button class="tab-btn" onclick="tab(event, 'abaPintura')">Pintura</button>
+                <button class="tab-btn" onclick="tab(event, 'abaTexto')">Texto</button>
+                <button class="tab-btn" onclick="tab(event, 'abaImagens')">Biblioteca</button>
+            </div>
+
+            <div id="abaAjustes" class="content active">
+                <label>Girar Item</label>
+                <input type="range" min="0" max="360" value="0" oninput="ajustar('rotate', this.value)" style="width:100%; margin:15px 0;">
+                <label>Transparência</label>
+                <input type="range" min="0" max="100" value="100" oninput="ajustar('opacity', this.value)" style="width:100%; margin:15px 0;">
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-start" onclick="ajustar('scale', 1.1)" style="background:#edf2f7; color:#2d3748">➕ Aumentar</button>
+                    <button class="btn-start" onclick="ajustar('scale', 0.9)" style="background:#edf2f7; color:#2d3748">➖ Diminuir</button>
+                </div>
+            </div>
+
+            <div id="abaPintura" class="content">
+                <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px;" id="corGrade"></div>
+                <input type="color" oninput="colorir(this.value)" style="width:100%; height:45px; margin-top:15px; border:none; border-radius:8px;">
+            </div>
+
+            <div id="abaTexto" class="content">
+                <input type="text" id="txtInput" placeholder="Digite seu texto..." style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd;">
+                <button class="btn-start" style="margin-top:10px" onclick="addTexto()">Adicionar Texto</button>
+            </div>
+
+            <div id="abaImagens" class="content">
+                <div id="bibliotecaContainer"></div>
+            </div>
+        </div>
+        
+        <button class="btn-start" style="margin-top:25px" onclick="download()">📥 Baixar Meu Projeto</button>
+        <a href="https://wa.me/?text=Confira meu projeto de decoração!" class="btn-zap">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22"> Compartilhar no WhatsApp
+        </a>
+    </section>
+
+    <section style="padding:20px; max-width:800px; margin:0 auto;" id="ajuda">
+        <div style="background:#fff; border-radius:15px; overflow:hidden; border:1px solid #e2e8f0;">
+            <div style="padding:15px; background:#f8fafc; font-weight:700;">🤖 Assistente</div>
+            <div id="chatDisplay" style="height:120px; overflow-y:auto; padding:15px; font-size:13px;"></div>
+            <div style="display:flex; border-top:1px solid #eee;">
+                <input type="text" id="chatMsg" placeholder="Dúvidas?" style="flex:1; padding:12px; border:none; outline:none;">
+                <button onclick="falarIA()" style="padding:10px 20px; background:var(--primary-light); color:#fff; border:none;">Enviar</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    Desenvolvido para mentes criativas<br>
+    Contato: <a href="mailto:Adm.rute.silva@gmail.com" style="color:#fff">Adm.rute.silva@gmail.com</a><br>
+    ©️ 2026 Visualisador de decoração | todos os direitos reservados
+</footer>
+
+<script>
+    let sel = null;
+    const IMAGENS_DATA = {
+        "Biblioteca": ["https://i.postimg.cc/hvXnc7JL/1xg.jpg", "https://i.postimg.cc/0jzvPJ6m/39140-c8ek6oipfd.png", "https://i.postimg.cc/XJHWRgv3/590560797849264.jpg", "https://i.postimg.cc/bJCP7RwB/800564197291108.jpg", "https://i.postimg.cc/hjynk0Gf/976433699207551.jpg", "https://i.postimg.cc/G27RWjpT/images-1.png", "https://i.postimg.cc/KvgbWBhh/images-2.png", "https://i.postimg.cc/dVPFc3JB/images-2025-09-03T205424-846.jpg", "https://i.postimg.cc/ydYBpGsM/images-2025-09-03T205433-322.jpg", "https://i.postimg.cc/g2VWzp0t/images-2025-09-03T205440-930.jpg", "https://i.postimg.cc/13GQmSzJ/images-2025-09-03T205445-897.jpg", "https://i.postimg.cc/mkP4BFck/images-2025-09-03T205507-586.jpg"],
+        "Papéis de Parede": ["https://i.postimg.cc/CKYTQ2S4/4700-89464-std-024149.png", "https://i.postimg.cc/KYFSHWxw/adesivo-decorativo-lua-e-galhos-boho-chique-024142.png", "https://i.postimg.cc/JzjCK8V6/images-48-024152.jpg", "https://i.postimg.cc/5t1dRrbK/images-51-024149.jpg"],
+        "Portas/Janelas": ["https://i.postimg.cc/XqsgcpxT/ai-generated-door-interior-isolated-on-transparent-background-free-png.png", "https://i.postimg.cc/Y0r3W1Nf/images-2025-09-03T213517-446.jpg", "https://i.postimg.cc/MH9Ybvt7/pngtree-wooden-door-png-image-6093732-1.png"],
+        "Móveis e Eletros": ["https://i.postimg.cc/gjxpm6ws/minimal-black-wall-clock-png.png", "https://i.postimg.cc/cLyWGCdB/modern-gray-refrigerator-illustration-vector-design-on-transparent-background-free-png.png", "https://i.postimg.cc/gJSpCK00/pngtree-an-ornate-luxurious-sofa-png-image-15430205.png", "https://i.postimg.cc/P5WjXHqF/relogio-de-parede-30-x-30-cm-mar-2568br-1567141445-90ff-600x600.png"]
+    };
+
+    function initLib() {
+        const container = document.getElementById('bibliotecaContainer');
+        for (const [cat, urls] of Object.entries(IMAGENS_DATA)) {
+            const h = document.createElement('div');
+            h.innerHTML = `<p style="font-weight:700; font-size:12px; margin:10px 0 5px;">${cat}</p>`;
+            const track = document.createElement('div');
+            track.className = 'carousel-track';
+            urls.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url; img.className = 'img-thumb';
+                img.onclick = () => addItem(url);
+                track.appendChild(img);
+            });
+            container.appendChild(h); container.appendChild(track);
+        }
+    }
+    initLib();
+
+    const cores = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ffffff', '#000000', '#8b4513', '#d2b48c', '#808080', '#ffa500'];
+    cores.forEach(c => {
+        const d = document.createElement('div');
+        d.style.height = '30px'; d.style.background = c; d.style.borderRadius = '5px'; d.style.cursor = 'pointer';
+        d.onclick = () => colorir(c);
+        document.getElementById('corGrade').appendChild(d);
+    });
+
+    function msg(t) {
+        const b = document.getElementById('statusBox');
+        b.innerText = t; b.style.display = 'block';
+        setTimeout(() => b.style.display = 'none', 5000);
+    }
+
+    function handleFile(input, type) {
+        if(!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if(type === 'bg') {
+                document.getElementById('viewBg').src = e.target.result;
+                msg("Ambiente carregado! Clique abaixo para começar.");
+            } else {
+                addItem(e.target.result);
+                msg("Imagem inserida com sucesso! Agora clique no botão começar a decorar.");
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function verificarAntesDeIniciar() {
+        if(!document.getElementById('viewBg').src.includes('data') && !document.getElementById('viewBg').src.includes('http')) {
+            document.getElementById('modalAviso').style.display = 'flex';
+        } else {
+            document.getElementById('simulador').scrollIntoView({behavior:'smooth'});
+            msg("Iniciando modo de edição...");
+        }
+    }
+
+    function addItem(src) {
+        const div = document.createElement('div');
+        div.className = 'dec-item';
+        div.style.width = '150px'; div.style.top = '50px'; div.style.left = '50px';
+        div.innerHTML = `<img src="${src}">`;
+        div.addEventListener('mousedown', (e) => select(div));
+        div.addEventListener('touchstart', (e) => select(div), {passive: true});
+        document.getElementById('overlayItems').appendChild(div);
+        makeDraggable(div);
+        select(div);
+    }
+
+    function select(el) {
+        if(sel) sel.classList.remove('selected');
+        sel = el; sel.classList.add('selected');
+    }
+
+    function ajustar(t, v) {
+        if(!sel) return;
+        if(t === 'rotate') sel.style.transform = `rotate(${v}deg)`;
+        if(t === 'opacity') sel.style.opacity = v / 100;
+        if(t === 'scale') {
+            let w = parseInt(sel.style.width);
+            sel.style.width = (w * v) + "px";
+        }
+    }
+
+    function colorir(c) {
+        const o = document.getElementById('overlayPaint');
+        o.style.background = c; o.style.opacity = '0.35';
+    }
+
+    function makeDraggable(el) {
+        let p1=0, p2=0, p3=0, p4=0;
+        const stage = document.getElementById('mainStage');
+        el.onmousedown = dragStart;
+        el.ontouchstart = dragStart;
+
+        function dragStart(e) {
+            if (e.type === "touchstart") {
+                p3 = e.touches[0].clientX; p4 = e.touches[0].clientY;
+            } else {
+                e.preventDefault();
+                p3 = e.clientX; p4 = e.clientY;
+            }
+            document.onmouseup = stop; document.ontouchend = stop;
+            document.onmousemove = move; document.ontouchmove = move;
+        }
+
+        function move(e) {
+            let cx = (e.type === "touchmove") ? e.touches[0].clientX : e.clientX;
+            let cy = (e.type === "touchmove") ? e.touches[0].clientY : e.clientY;
+            p1 = p3 - cx; p2 = p4 - cy; p3 = cx; p4 = cy;
+            let nT = el.offsetTop - p2; let nL = el.offsetLeft - p1;
+            if(nT >= 0 && nT + el.offsetHeight <= stage.offsetHeight) el.style.top = nT + "px";
+            if(nL >= 0 && nL + el.offsetWidth <= stage.offsetWidth) el.style.left = nL + "px";
+        }
+        function stop() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
+    }
+
+    function addTexto() {
+        const val = document.getElementById('txtInput').value;
+        if(!val) return;
+        const d = document.createElement('div');
+        d.className = 'dec-item'; d.innerText = val;
+        d.style.fontSize = '30px'; d.style.fontWeight = 'bold'; d.style.top='20px';
+        d.onmousedown = () => select(d);
+        document.getElementById('overlayItems').appendChild(d);
+        makeDraggable(d); select(d);
+    }
+
+    function removerItem() { if(sel) { sel.remove(); sel = null; } }
+
+    function tab(e, id) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.currentTarget.classList.add('active');
+    }
+
+    function falarIA() {
+        const inp = document.getElementById('chatMsg');
+        const disp = document.getElementById('chatDisplay');
+        let v = inp.value.toLowerCase();
+        let r = "Posso te ajudar com os ajustes ou a pintura!";
+        if(v.includes("oi")) r = "Olá! Como posso deixar seu ambiente mais elegante hoje?";
+        else if(v.includes("obrigado") || v.includes("obrigada")) r = "Por nada! Seu projeto está ficando incrível.";
+        else if(v.includes("bom")) r = "Está ficando maravilhoso! Você tem um ótimo olhar para design.";
+        
+        disp.innerHTML += `<p><b>Você:</b> ${inp.value}</p>`;
+        setTimeout(() => { disp.innerHTML += `<p><b>Robô:</b> ${r}</p>`; disp.scrollTop = disp.scrollHeight; }, 500);
+        inp.value = "";
+    }
+
+    function download() {
+        if(sel) sel.classList.remove('selected');
+        html2canvas(document.getElementById('mainStage')).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'meu-projeto-premium.png'; link.href = canvas.toDataURL(); link.click();
+        });
+    }
+</script>
+</body>
+</html>
