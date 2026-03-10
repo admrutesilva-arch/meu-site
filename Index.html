@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport"/>
+    <title>Visualizador de Decoração Profissional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-light: #4299e1; --primary-dark: #0c4a6e;
+            --bg1: #f8f9fb; --text: #0b1220;
+            --gradient-premium: linear-gradient(90deg, #0d416b, #0b1220);
+            --accent: #10b981;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { overflow-x: hidden; width: 100%; position: relative; scroll-behavior: smooth; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg1); color: var(--text); }
+
+        .topo { position: sticky; top: 0; z-index: 999; background: var(--gradient-premium); padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .menu-lista { display: flex; justify-content: center; gap: 15px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+        .menu-lista li a { color: #fff; text-decoration: none; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .banners { padding: 10px; text-align: center; }
+        .banner-img { width: 100%; max-width: 1100px; border-radius: 12px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+
+        .upload-area { max-width: 600px; margin: 10px auto; padding: 0 15px; display: flex; flex-direction: column; align-items: center; }
+        
+        .feedback-msg { display: none; width: 100%; text-align: center; font-size: 13px; font-weight: 600; color: var(--accent); background: #e6fffa; padding: 12px; border-radius: 8px; margin: 5px 0 15px 0; border: 1px solid var(--accent); animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .file-label { width: 100%; padding: 14px; border: 2px solid var(--primary-light); border-radius: 12px; background: #fff; color: var(--primary-dark); font-weight: 700; text-align: center; cursor: pointer; margin-bottom: 5px; font-size: 14px; }
+        .btn-start { width: 100%; padding: 16px; background: var(--gradient-premium); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 15px; transition: 0.3s; }
+
+        .simulador { max-width: 1000px; margin: 0 auto; padding: 10px; }
+        
+        .ui-top-bar { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-bottom: 8px; padding: 0 5px; }
+        .hist-group { display: flex; gap: 8px; }
+        .btn-ui { background: #fff; color: var(--primary-dark); border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .btn-delete { background: #fff; color: #ef4444; border: 1px solid #fee2e2; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+        .stage { position: relative; width: 100%; height: 400px; background: #ddd; border-radius: 15px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); touch-action: none; }
+        @media (min-width: 768px) { .stage { height: 550px; } }
+        
+        .bg-img { position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; }
+        .object-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+        
+        .dec-item { position: absolute; cursor: move; pointer-events: auto; z-index: 4; transform-origin: center center; touch-action: none; }
+        .dec-item img { width: 100%; height: auto; display: block; pointer-events: none; }
+        .dec-item.selected { outline: 2px dashed var(--primary-light); background: rgba(66,153,225,0.1); }
+
+        #modalAviso { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #fff; padding: 30px; border-radius: 20px; text-align: center; max-width: 350px; border: 4px solid #ffd700; }
+        .arrow-up { font-size: 50px; color: #ffd700; display: block; animation: bounce 1s infinite; margin-bottom: 10px; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .panel { background: #fff; border-radius: 15px; margin-top: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; }
+        .tabs { display: flex; background: #f1f5f9; }
+        .tab-btn { flex: 1; padding: 14px 5px; border: none; font-weight: 700; cursor: pointer; color: #64748b; font-size: 11px; text-transform: uppercase; }
+        .tab-btn.active { background: #fff; color: var(--primary-light); border-bottom: 3px solid var(--primary-light); }
+        
+        .content { display: none; padding: 20px; }
+        .content.active { display: block; }
+
+        .carousel-title { font-size: 14px; font-weight: 700; margin: 15px 0 10px; color: var(--primary-dark); border-left: 4px solid var(--primary-light); padding-left: 10px; }
+        .carousel-track { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+        .carousel-track::-webkit-scrollbar { display: none; }
+        .img-thumb { width: 85px; height: 85px; object-fit: contain; border-radius: 10px; flex-shrink: 0; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; }
+
+        /* Estilo do Assistente IA */
+        .chat-container { margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; background: #f8fafc; }
+        .chat-display { height: 150px; overflow-y: auto; font-size: 13px; margin-bottom: 10px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .chat-display p { margin: 8px 0; line-height: 1.5; }
+
+        .btn-zap { background: #25d366; color: #fff; padding: 18px; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; font-weight: 700; margin-top: 15px; font-size: 15px; }
+        .custom-row { display: flex; align-items: center; gap: 10px; margin-top: 15px; background: #f8fafc; padding: 10px; border-radius: 10px; }
+        
+        .footer { background: var(--gradient-premium); color: #fff; text-align: center; padding: 40px 20px; font-size: 14px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<header class="topo">
+    <ul class="menu-lista">
+        <li><a href="#">🏠 Início</a></li>
+        <li><a href="#simulador">✨ Simulador</a></li>
+        <li><a href="#ajuda">🤖 Assistente</a></li>
+        <li><a href="#">💎 Premium</a></li>
+    </ul>
+</header>
+
+<div id="modalAviso">
+    <div class="modal-content">
+        <span class="arrow-up">⬆️</span>
+        <h3 style="color: var(--primary-dark);">Quase lá!</h3>
+        <p style="color: #4a5568;">Sua foto ainda não foi enviada. Por favor, clique no botão acima para escolher o ambiente que deseja decorar!</p>
+        <button class="btn-start" onclick="fecharModal()">Entendi, vou enviar!</button>
+    </div>
+</div>
+
+<main>
+    <section class="banners">
+        <img src="https://i.postimg.cc/zDc24Qqn/banner1.png" class="banner-img">
+    </section>
+
+    <section class="upload-area">
+        <label class="file-label">📸 Enviar Foto do Ambiente <input type="file" id="inputBg" hidden onchange="handleFile(this, 'bg')"></label>
+        <div id="fb-ambiente" class="feedback-msg">Ambiente carregado! Agora clique no botão abaixo para adicionar os itens de decoração.</div>
+        
+        <label class="file-label" style="margin-top: 10px;">🛋️ Adicionar Móveis/Itens <input type="file" hidden multiple onchange="handleFile(this, 'item')"></label>
+        <div id="fb-decor" class="feedback-msg">Item recebido com sucesso! Agora clique logo abaixo em "Começar a Decorar" para brilhar!</div>
+        
+        <button class="btn-start" style="margin-top: 15px;" onclick="verificarAntesDeIniciar()">🚀 Começar a Decorar</button>
+    </section>
+
+    <section class="simulador" id="simulador">
+        <div class="ui-top-bar">
+            <div class="hist-group">
+                <button class="btn-ui" onclick="undo()">↩️ Desfazer</button>
+                <button class="btn-ui" onclick="redo()">↪️ Refazer</button>
+            </div>
+            <button class="btn-delete" onclick="removerItem()">🗑️ Apagar</button>
+        </div>
+
+        <div class="stage" id="mainStage">
+            <img id="viewBg" class="bg-img" src="">
+            <div id="paintLayer" style="position:absolute; inset:0; z-index:2; pointer-events:none; mix-blend-mode:multiply;"></div>
+            <div id="overlayItems" class="object-layer"></div>
+        </div>
+
+        <div class="panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="tab(event, 'abaAjustes')">Ajustes</button>
+                <button class="tab-btn" onclick="tab(event, 'abaPintura')">Pintura</button>
+                <button class="tab-btn" onclick="tab(event, 'abaTexto')">Texto</button>
+                <button class="tab-btn" onclick="tab(event, 'abaImagens')">Biblioteca</button>
+                <button class="tab-btn" id="btnAbaIA" onclick="tab(event, 'abaIA')">🤖 IA</button>
+            </div>
+
+            <div id="abaAjustes" class="content active">
+                <label style="font-size:12px; font-weight:700;">Girar Item</label>
+                <input type="range" min="0" max="360" value="0" oninput="apply('rotate', this.value)" style="width:100%; margin:15px 0;">
+                
+                <label style="font-size:12px; font-weight:700;">Transparência</label>
+                <input type="range" min="0" max="100" value="100" oninput="apply('opacity', this.value)" style="width:100%; margin:15px 0;">
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-start" onclick="apply('scale', 1.1)" style="background:#f1f5f9; color:#1e293b">➕ Aumentar</button>
+                    <button class="btn-start" onclick="apply('scale', 0.9)" style="background:#f1f5f9; color:#1e293b">➖ Diminuir</button>
+                </div>
+            </div>
+
+            <div id="abaPintura" class="content">
+                <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px;" id="gradeCores"></div>
+                <div class="custom-row">
+                    <label style="font-size:12px; font-weight:700;">Escolher Cor:</label>
+                    <input type="color" oninput="colorir(this.value)" style="flex:1; height:45px; border:none; border-radius:8px; cursor:pointer;">
+                </div>
+            </div>
+
+            <div id="abaTexto" class="content">
+                <input type="text" id="txtInp" placeholder="Escreva algo legal..." style="width:100%; padding:14px; border-radius:10px; border:1px solid #e2e8f0;">
+                <div class="custom-row">
+                    <label style="font-size:12px; font-weight:700;">Cor:</label>
+                    <input type="color" id="txtCol" value="#000000" style="flex:1; height:40px; border:none; border-radius:8px;">
+                </div>
+                <button class="btn-start" style="margin-top:10px" onclick="addTxt()">Inserir Texto</button>
+            </div>
+
+            <div id="abaImagens" class="content">
+                <div id="galeriaPremium"></div>
+            </div>
+
+            <div id="abaIA" class="content">
+                <div class="chat-container">
+                    <div id="chatDisplay" class="chat-display">
+                        <p><b>Assistente:</b> Olá! Sou seu consultor de estilo. Como posso deixar seu ambiente mais elegante hoje?</p>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="chatMsg" placeholder="Diga olá ou tire uma dúvida..." style="flex:1; padding:12px; border-radius:8px; border:1px solid #cbd5e1; outline: none;">
+                        <button class="btn-start" style="width:auto; padding:10px 20px;" onclick="falarIA()">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-start" style="margin-top:25px; background: #000;" onclick="exportar()">📥 Baixar Meu Projeto</button>
+        <a href="https://wa.me/?text=Veja o projeto que acabei de decorar!" class="btn-zap">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="22"> Compartilhar no WhatsApp
+        </a>
+    </section>
+</main>
+
+<footer class="footer">
+    Desenvolvido para mentes criativas<br>
+    Contato: Adm.rute.silva@gmail.com<br>
+    © 2026 Visualisador de Decoração | Todos os direitos reservados
+</footer>
+
+<script>
+    let sel = null;
+    let history = [];
+    let step = -1;
+
+    const LINKS = {
+        "Móveis e Biblioteca": ["https://i.postimg.cc/hvXnc7JL/1xg.jpg", "https://i.postimg.cc/0jzvPJ6m/39140-c8ek6oipfd.png", "https://i.postimg.cc/XJHWRgv3/590560797849264.jpg", "https://i.postimg.cc/bJCP7RwB/800564197291108.jpg", "https://i.postimg.cc/hjynk0Gf/976433699207551.jpg", "https://i.postimg.cc/G27RWjpT/images-1.png", "https://i.postimg.cc/KvgbWBhh/images-2.png", "https://i.postimg.cc/dVPFc3JB/images-2025-09-03T205424-846.jpg", "https://i.postimg.cc/ydYBpGsM/images-2025-09-03T205433-322.jpg", "https://i.postimg.cc/g2VWzp0t/images-2025-09-03T205440-930.jpg"],
+        "Pisos e Papéis": ["https://i.postimg.cc/CKYTQ2S4/4700-89464-std-024149.png", "https://i.postimg.cc/KYFSHWxw/adesivo-decorativo-lua-e-galhos-boho-chique-024142.png", "https://i.postimg.cc/JzjCK8V6/images-48-024152.jpg"],
+        "Portas e Janelas": ["https://i.postimg.cc/XqsgcpxT/ai-generated-door-interior-isolated-on-transparent-background-free-png.png", "https://i.postimg.cc/Y0r3W1Nf/images-2025-09-03T213517-446.jpg"]
+    };
+
+    const coresPre = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ffffff', '#000000', '#8b4513', '#d2b48c', '#808080', '#ffa500'];
+    coresPre.forEach(c => {
+        const d = document.createElement('div');
+        d.style.height = '30px'; d.style.background = c; d.style.borderRadius = '5px'; d.style.cursor = 'pointer';
+        d.onclick = () => colorir(c);
+        document.getElementById('gradeCores').appendChild(d);
+    });
+
+    function initGaleria() {
+        const g = document.getElementById('galeriaPremium');
+        for (const [title, imgs] of Object.entries(LINKS)) {
+            const h = document.createElement('div'); h.className = 'carousel-title'; h.innerText = title;
+            const track = document.createElement('div'); track.className = 'carousel-track';
+            imgs.forEach(url => {
+                const img = document.createElement('img'); img.src = url; img.className = 'img-thumb';
+                img.onclick = () => { addItem(url); };
+                track.appendChild(img);
+            });
+            g.appendChild(h); g.appendChild(track);
+        }
+    }
+    initGaleria();
+
+    function mostrarFeedback(id) {
+        const fb = document.getElementById(id);
+        fb.style.display = 'block';
+        setTimeout(() => { fb.style.display = 'none'; }, 4000);
+    }
+
+    function handleFile(input, type) {
+        if(!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if(type === 'bg') {
+                document.getElementById('viewBg').src = e.target.result;
+                mostrarFeedback('fb-ambiente');
+            } else {
+                addItem(e.target.result);
+                mostrarFeedback('fb-decor');
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function verificarAntesDeIniciar() {
+        const bg = document.getElementById('viewBg').src;
+        if(!bg || bg === "" || !bg.startsWith('data')) {
+            document.getElementById('modalAviso').style.display = 'flex';
+        } else {
+            document.getElementById('simulador').scrollIntoView({behavior:'smooth'});
+        }
+    }
+    function fecharModal() { document.getElementById('modalAviso').style.display = 'none'; }
+
+    function save() {
+        step++;
+        if (step < history.length) history.length = step;
+        history.push(document.getElementById('overlayItems').innerHTML);
+    }
+    function undo() { if (step > 0) { step--; renderHist(); } }
+    function redo() { if (step < history.length - 1) { step++; renderHist(); } }
+    
+    function renderHist() {
+        document.getElementById('overlayItems').innerHTML = history[step];
+        const items = document.querySelectorAll('.dec-item');
+        items.forEach(it => {
+            it.onmousedown = () => select(it);
+            it.ontouchstart = () => select(it);
+            makeDraggable(it);
+        });
+    }
+
+    function addItem(src) {
+        const d = document.createElement('div'); d.className = 'dec-item';
+        d.style.width = '180px'; d.style.top = '100px'; d.style.left = '100px';
+        d.innerHTML = `<img src="${src}">`;
+        d.onmousedown = () => select(d);
+        d.ontouchstart = () => select(d);
+        document.getElementById('overlayItems').appendChild(d);
+        makeDraggable(d); select(d); save();
+    }
+
+    function select(el) {
+        if(sel) sel.classList.remove('selected');
+        sel = el; sel.classList.add('selected');
+    }
+
+    function apply(t, v) {
+        if(!sel) return;
+        if(t === 'rotate') sel.style.transform = `rotate(${v}deg)`;
+        if(t === 'opacity') sel.style.opacity = v / 100;
+        if(t === 'scale') {
+            let w = parseInt(sel.style.width);
+            sel.style.width = (w * v) + "px";
+        }
+        save();
+    }
+
+    function colorir(c) {
+        const p = document.getElementById('paintLayer');
+        p.style.background = c; p.style.opacity = 0.35;
+    }
+
+    function addTxt() {
+        const v = document.getElementById('txtInp').value;
+        if(!v) return;
+        const d = document.createElement('div'); d.className = 'dec-item';
+        d.innerText = v; d.style.color = document.getElementById('txtCol').value;
+        d.style.fontSize = '35px'; d.style.fontWeight = '700'; d.style.top = '50px';
+        d.onmousedown = () => select(d);
+        document.getElementById('overlayItems').appendChild(d);
+        makeDraggable(d); select(d); save();
+    }
+
+    function removerItem() { if(sel) { sel.remove(); sel = null; save(); } }
+
+    function makeDraggable(el) {
+        let x1=0, y1=0, x2=0, y2=0;
+        el.onmousedown = start; el.ontouchstart = start;
+        function start(e) {
+            let cx = (e.type === "touchstart") ? e.touches[0].clientX : e.clientX;
+            let cy = (e.type === "touchstart") ? e.touches[0].clientY : e.clientY;
+            x2 = cx; y2 = cy;
+            document.onmouseup = end; document.ontouchend = end;
+            document.onmousemove = move; document.ontouchmove = move;
+        }
+        function move(e) {
+            let cx = (e.type === "touchmove") ? e.touches[0].clientX : e.clientX;
+            let cy = (e.type === "touchmove") ? e.touches[0].clientY : e.clientY;
+            x1 = x2 - cx; y1 = y2 - cy; x2 = cx; y2 = cy;
+            el.style.top = (el.offsetTop - y1) + "px";
+            el.style.left = (el.offsetLeft - x1) + "px";
+        }
+        function end() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; save(); }
+    }
+
+    function tab(e, id) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.currentTarget.classList.add('active');
+    }
+
+    function falarIA() {
+        const inp = document.getElementById('chatMsg');
+        const disp = document.getElementById('chatDisplay');
+        let v = inp.value.toLowerCase();
+        let r = "Adorei a pergunta! Posso te ajudar com os ajustes de tamanho, rotação, pintura das paredes ou até a colocar textos personalizados no seu projeto. O que prefere?";
+        
+        if(v.includes("oi") || v.includes("olá")) {
+            r = "Olá, tudo bem? É um prazer ajudar você a criar o ambiente dos seus sonhos!";
+        } else if(v.includes("obrigado") || v.includes("obrigada")) {
+            r = "Por nada! Fico muito feliz em ser útil. Se precisar de mais alguma dica de design, é só chamar!";
+        } else if(v.includes("ficou bom") || v.includes("gostou") || v.includes("bonito")) {
+            r = "Nossa, ficou simplesmente maravilhoso! Você tem um excelente gosto para decoração e uma ótima visão espacial.";
+        } else if(v.includes("como") || v.includes("funciona") || v.includes("ajuda")) {
+            r = "É muito simples: use a aba 'Ajustes' para girar ou mudar a transparência, a aba 'Pintura' para mudar a cor das paredes e a 'Biblioteca' para escolher móveis incríveis!";
+        } else if(v.includes("cor") || v.includes("pintar")) {
+            r = "Na aba 'Pintura' você pode escolher cores prontas ou usar o seletor personalizado para encontrar o tom perfeito para sua parede!";
+        }
+
+        disp.innerHTML += `<p><b>Você:</b> ${inp.value}</p>`;
+        setTimeout(() => { 
+            disp.innerHTML += `<p><b>Assistente:</b> ${r}</p>`; 
+            disp.scrollTop = disp.scrollHeight; 
+        }, 600);
+        inp.value = "";
+    }
+
+    function exportar() {
+        if(sel) sel.classList.remove('selected');
+        html2canvas(document.getElementById('mainStage'), { useCORS: true }).then(c => {
+            const l = document.createElement('a'); l.download = 'meu-projeto.png'; l.href = c.toDataURL(); l.click();
+        });
+    }
+
+    window.onload = () => { save(); };
+</script>
+</body>
+</html>
